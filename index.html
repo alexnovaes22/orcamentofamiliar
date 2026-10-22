@@ -129,6 +129,9 @@ input.name{width:100%;min-width:160px;padding:6px 8px;border:1px solid var(--lin
 .panel h2{font-size:1.1rem;margin-bottom:10px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
 .sync{font-size:.8rem;color:var(--muted)}.sync.ok::before{content:"● ";color:var(--green)}.sync.bad{color:var(--red);font-weight:600}
+.lembrete{max-width:1180px;margin:16px auto 0;padding:0 20px}
+.lembrete>div{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--warn-bg);border-left:4px solid var(--ochre);border-radius:6px;padding:10px 14px;font-size:.92rem}
+@media (max-width:640px){.lembrete{padding:0 10px}}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 18px;border-radius:999px;font-weight:600;z-index:50;font-size:.9rem}
 @media (max-width:640px){header.top{padding-left:12px;padding-right:12px}main{padding:14px 10px 80px}input.v{width:96px}td{padding:4px 8px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -199,6 +202,7 @@ input.name{width:100%;min-width:160px;padding:6px 8px;border:1px solid var(--lin
       <span id="m-btns" style="display:contents"></span>
     </div>
   </header>
+  <div id="lembrete" class="lembrete hidden" role="status"></div>
   <main id="view" tabindex="-1"></main>
 </div>
 
@@ -358,7 +362,7 @@ $("#f-old").onsubmit=async e=>{
 
 async function sair(msg){
   if(pendente&&S){status("Salvando antes de sair…");clearTimeout(saveTimer);try{await gravar();pendente=false}catch{if(!confirm("Não consegui salvar a última alteração. Sair mesmo assim?"))return}}
-  S=null;KEY=null;PASS_TMP=null;charts.forEach(c=>c.destroy());charts=[];$("#view").innerHTML="";
+  S=null;KEY=null;PASS_TMP=null;lembreteAdiado=false;$("#lembrete").classList.add("hidden");charts.forEach(c=>c.destroy());charts=[];$("#view").innerHTML="";
   try{await auth.signOut()}catch{}
   telaLogin("f-login",msg);
 }
@@ -402,7 +406,25 @@ function topo(){
   $(".mode").classList.toggle("hidden",VIEW!=="mes");
   $$(".mode button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===MODO));
 }
-function render(){if(!S)return;charts.forEach(c=>c.destroy());charts=[];topo();({mes:vMes,ano:vAno,backup:vBackup})[VIEW]()}
+let lembreteAdiado=false;
+function lembreteBackup(){
+  const ult=S.settings?.ultimoBackup?new Date(S.settings.ultimoBackup):null;
+  const hoje=new Date(), iniMes=new Date(hoje.getFullYear(),hoje.getMonth(),1);
+  const ant=hoje.getMonth()===0?`${hoje.getFullYear()-1}-12`:`${hoje.getFullYear()}-${String(hoje.getMonth()).padStart(2,"0")}`;
+  if(!ult)return "Você ainda não baixou nenhum backup em Excel. Ele é a sua garantia caso esqueça a senha.";
+  if(temReal(ant)&&ult<iniMes){const [y,m]=ant.split("-").map(Number);return `${MESES[m-1][0].toUpperCase()+MESES[m-1].slice(1)} terminou. Baixe o Excel para guardar o real do mês fechado.`}
+  const dias=Math.floor((hoje-ult)/86400000);
+  if(dias>=7)return `Faz ${dias} dias desde o último backup em Excel.`;
+  return null;
+}
+function mostrarLembrete(){
+  const el=$("#lembrete"),msg=S&&!lembreteAdiado?lembreteBackup():null;
+  el.classList.toggle("hidden",!msg);if(!msg){el.innerHTML="";return}
+  el.innerHTML=`<div><span>${esc(msg)}</span><span class="row"><button class="btn sm primary" id="lb-baixar">Baixar Excel agora</button><button class="btn sm" id="lb-depois">Lembrar depois</button></span></div>`;
+  $("#lb-baixar").onclick=exportXlsx;
+  $("#lb-depois").onclick=()=>{lembreteAdiado=true;mostrarLembrete()};
+}
+function render(){if(!S)return;charts.forEach(c=>c.destroy());charts=[];topo();mostrarLembrete();({mes:vMes,ano:vAno,backup:vBackup})[VIEW]()}
 
 /* ---------- tela: mês ---------- */
 function vMes(){
@@ -546,7 +568,8 @@ function vBackup(){
       <button class="btn" id="x-pdfm">PDF de ${MESES[MES-1]}</button>
       <button class="btn" id="x-pdfa">PDF do ano ${ANO}</button>
     </div>
-    <p class="muted small" style="margin-top:10px">Esses arquivos não são criptografados. Guarde-os numa pasta só sua e não os envie para o GitHub.</p>
+    <p class="small" style="margin-top:10px">${S.settings?.ultimoBackup?`Último backup em Excel: ${new Date(S.settings.ultimoBackup).toLocaleDateString("pt-BR")}.`:"Nenhum backup em Excel baixado ainda."}</p>
+    <p class="muted small" style="margin-top:4px">Esses arquivos não são criptografados. Guarde-os numa pasta só sua e não os envie para o GitHub.</p>
   </section>
   <section class="panel"><h2>Restaurar</h2>
     <p class="muted">Substitui todos os dados da nuvem pelos de um Excel baixado por este sistema.</p>
@@ -604,7 +627,8 @@ function exportXlsx(){
   wb.Workbook={Sheets:[{},{},{Hidden:1}]};
   const out=XLSX.write(wb,{bookType:"xlsx",type:"array"});
   download(`orcamento-familia-${ANO}-${new Date().toISOString().slice(0,10)}.xlsx`,new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
-  toast("Planilha baixada");
+  (S.settings||={}).ultimoBackup=new Date().toISOString();save();mostrarLembrete();
+  toast("Planilha baixada. Guarde no Google Drive ou numa pasta só sua.");
 }
 async function lerBackupXlsx(file){
   try{
@@ -661,4 +685,3 @@ else{
 </script>
 </body>
 </html>
-
