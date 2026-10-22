@@ -1,1 +1,4 @@
-
+# Nunca envie dados financeiros para o GitHub
+*.xlsx
+*.pdf
+*.json
