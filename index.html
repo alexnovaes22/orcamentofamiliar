@@ -133,6 +133,26 @@ input.name{width:100%;min-width:160px;padding:6px 8px;border:1px solid var(--lin
 .lembrete>div{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--warn-bg);border-left:4px solid var(--ochre);border-radius:6px;padding:10px 14px;font-size:.92rem}
 @media (max-width:640px){.lembrete{padding:0 10px}}
 table.fat{table-layout:fixed;min-width:860px}table.fat th{text-align:left}table.fat th.r{text-align:right}table.fat td{overflow:hidden;text-overflow:ellipsis;padding:4px 8px}table.fat th{padding:8px}table.fat input.name{min-width:0!important;width:100%}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px;margin-bottom:16px}
+.mcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.mcard .v{font-family:var(--font-num);font-size:1.4rem;font-weight:700;margin:2px 0}
+.sum3,.sum4{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.sum3{grid-template-columns:repeat(3,minmax(0,1fr))}.sum4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.sum3>div,.sum4>div{background:var(--surface);padding:12px 16px}.sum3 .k,.sum4 .k{font-size:.82rem;color:var(--muted)}.sum3 .v,.sum4 .v{font-family:var(--font-num);font-size:1.3rem;font-weight:600}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+.panel-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.subtabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}.subtabs button{all:unset;cursor:pointer;padding:8px 14px;border-radius:999px;font-weight:600;border:1px solid var(--line);background:var(--surface)}
+.subtabs button[aria-pressed=true]{background:var(--blue);color:#fff;border-color:var(--blue)}.subtabs button:focus-visible{outline:3px solid var(--blue)}
+.catrow{display:grid;grid-template-columns:14px minmax(120px,1.2fr) 2fr 100px 110px 56px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.catrow .bar{height:10px;background:var(--sunk);border-radius:99px;overflow:hidden}.catrow .bar span{display:block;height:100%}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.fonte{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:10px}.fonte-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.fonte-h h3{font-size:1rem}
+details.hol{border-top:1px dashed var(--line);margin-top:8px}details.hol summary{cursor:pointer;display:grid;grid-template-columns:1fr auto auto;gap:12px;padding:8px 0;align-items:center}
+.lin{display:grid;grid-template-columns:1fr auto 44px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.75rem;font-weight:700;border:1px solid var(--line);background:var(--sunk)}.pill.warn{background:var(--warn-bg);border-color:#B9782A}.pill.ok{background:var(--ok-bg);border-color:var(--green)}
+.alert.info{border-color:var(--blue);background:var(--sunk)}
+table.plan td,table.plan th{padding:6px 8px}table.plan input.v{width:110px}
+@media (max-width:640px){.catrow{grid-template-columns:12px 1fr 90px;}.catrow .bar,.catrow .small{display:none}.sum3{grid-template-columns:1fr}}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 18px;border-radius:999px;font-weight:600;z-index:50;font-size:.9rem}
 @media (max-width:640px){header.top{padding-left:12px;padding-right:12px}main{padding:14px 10px 80px}input.v{width:96px}td{padding:4px 8px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -184,17 +204,14 @@ table.fat{table-layout:fixed;min-width:860px}table.fat th{text-align:left}table.
       <div class="row" style="align-items:center;gap:16px">
         <span class="brand">Orçamento da Família</span>
         <div class="tabs" role="group" aria-label="Telas">
-          <button data-v="mes">Mês</button>
-          <button data-v="ano">Ano</button>
-          <button data-v="faturas">Faturas</button>
-          <button data-v="backup">Backup e conta</button>
+          <button data-v="inicio">Início</button>
+          <button data-v="rendas">Rendas</button>
+          <button data-v="gastos">Gastos</button>
+          <button data-v="plano">Planejamento</button>
+          <button data-v="backup">Backup</button>
         </div>
       </div>
       <div class="row" style="align-items:center">
-        <div class="mode" role="group" aria-label="Valores">
-          <button data-m="p">Previsto</button>
-          <button data-m="r">Real</button>
-        </div>
         <span id="sync" class="sync" role="status" aria-live="polite"></span>
         <button class="btn sm" id="b-lock">Sair</button>
       </div>
@@ -225,7 +242,7 @@ const brl=v=>(v<0?"−":"")+"R$ "+nf.format(Math.abs(Number(v)||0));
 const brl0=v=>(v<0?"−":"")+"R$ "+new Intl.NumberFormat("pt-BR",{maximumFractionDigits:0}).format(Math.abs(Number(v)||0));
 const r2=v=>Math.round((Number(v)||0)*100)/100;
 const fmtIn=v=>v?nf.format(v):"";
-function parseBR(s){s=String(s||"").replace(/[R$\s]/g,"");if(!s)return 0;if(s.includes(","))s=s.replace(/\./g,"").replace(",",".");const n=parseFloat(s);return isFinite(n)?r2(n):0}
+function parseBR(s){s=String(s||"").replace(/[R$\s]/g,"");if(!s)return 0;if(s.includes(","))s=s.replace(/\./g,"").replace(",",".");else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,"");const n=parseFloat(s);return isFinite(n)?r2(n):0}
 const slug=s=>String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40)||"item";
 const cssVar=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 function toast(m){const t=document.createElement("div");t.className="toast";t.setAttribute("role","status");t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2400)}
@@ -372,193 +389,421 @@ $("#b-lock").onclick=()=>sair();
 let last=Date.now();["click","keydown","touchstart","scroll"].forEach(ev=>document.addEventListener(ev,()=>last=Date.now(),{passive:true}));
 setInterval(()=>{if(S&&Date.now()-last>(S.settings?.lockMin||15)*60000)sair("Saiu automaticamente por inatividade.")},20000);
 
-function entrar(){
+async function entrar(){
   $("#login").classList.add("hidden");$("#app").classList.remove("hidden");
-  ANO=S.ano||today.getFullYear();if(ANO!==today.getFullYear())MES=12;
-  VIEW="mes";MODO=null;render();status("Salvo na nuvem","ok");
+  ANO=today.getFullYear();MES=today.getMonth()+1;
+  if(migrarV4()){save();toast("Seus dados foram organizados no novo formato.")}
+  S.mes||={};S.fixas||=[];S.cfg||={};S.cfg.fontes||=FONTES_PADRAO.map(f=>({...f}));S.cfg.cnpjFonte||={};
+  $("#view").innerHTML='<p class="muted">Carregando…</p>';
+  await restaurarFaturasBackup();await carregarFaturasRecentes();
+  VIEW="inicio";render();status("Salvo na nuvem","ok");
 }
 
-/* ---------- acesso a valores ---------- */
-const V=(m,k,modo)=>Number(((S.v[m]||{})[k]||{})[modo])||0;
-function setV(m,k,modo,val){const o=((S.v[m]||={})[k]||={p:0,r:0});o[modo]=val;if(!o.p&&!o.r)delete S.v[m][k];save()}
-const temReal=m=>Object.values(S.v[m]||{}).some(o=>o.r);
-const modoPadrao=m=>temReal(m)||m<=NOW?"r":"p";
-const grupo=id=>S.grupos.find(g=>g.id===id);
-function totais(m,modo){
-  let bruta=0;S.fontes.forEach(f=>TIPOS_RENDA.forEach(([t])=>bruta+=V(m,`${f.id}|${t}`,modo)));
-  const somaG=g=>g.itens.reduce((a,i)=>a+V(m,i.id,modo),0);
-  let desc=0,desp=0,aplic=0;const porGrupo={};
-  S.grupos.forEach(g=>{const s=somaG(g);porGrupo[g.id]=r2(s);if(g.tipo==="desconto")desc+=s;else if(g.tipo==="aplicacao")aplic+=s;else desp+=s});
-  const liq=r2(bruta-desc), res=r2(liq-desp-aplic), resg=V(m,"resgate",modo);
-  return {bruta:r2(bruta),desc:r2(desc),liq,desp:r2(desp),aplic:r2(aplic),res,resg,porGrupo};
+/* =====================================================================
+   ORÇAMENTO v4: modelo simples (rendas, contas fixas, cartões, outros)
+   ===================================================================== */
+const CATS=["Casa e consórcio","Moradia e contas","Alimentação","Transporte","Saúde","Educação e filhos","Pessoais","Casa e decoração","Lazer e viagens","Banco e juros","Outros"];
+const CAT_COR={"Casa e consórcio":"#6E5687","Moradia e contas":"#2C5A86","Alimentação":"#B9782A","Transporte":"#C9A227","Saúde":"#5B8C5A","Educação e filhos":"#3F7880","Pessoais":"#8A6A4F","Casa e decoração":"#B8607F","Lazer e viagens":"#D9822B","Banco e juros":"#A93A36","Outros":"#7C858C"};
+const FONTES_PADRAO=[{id:"seed",nome:"SEED"},{id:"nead",nome:"NEAD"},{id:"unopar",nome:"Unopar"}];
+const FAT_CAT_PADRAO={"ABASTECIMENTO":"Transporte","ACESSORIOS":"Pessoais","ALEX":"Pessoais","ALIMENTAÇÃO":"Alimentação","BANCO":"Banco e juros","BFDS":"Alimentação","CASA":"Casa e decoração","CELULAR":"Moradia e contas","DECORAÇÃO":"Casa e decoração","ELETRÔNICOS":"Casa e decoração","ESTACIONAMENTO":"Transporte","FARMACIA":"Saúde","JUROS":"Banco e juros","MANUT IX35":"Transporte","MERCADO":"Alimentação","MOVEIS":"Casa e decoração","MURILO":"Educação e filhos","PADARIA":"Alimentação","PASSAPORTE":"Lazer e viagens","PIEDADE":"Outros","PREST CARRO":"Transporte","PREST SERVIÇO":"Moradia e contas","RENATA":"Pessoais","SAUDE":"Saúde","SEGURANÇA":"Moradia e contas","SEGURO":"Transporte","TRANSPORTE":"Transporte","VIAGEM":"Lazer e viagens"};
+const addMes=(m,k)=>{let [y,mo]=m.split("-").map(Number);mo+=k;y+=Math.floor((mo-1)/12);mo=((mo-1)%12+12)%12+1;return `${y}-${String(mo).padStart(2,"0")}`};
+const nomeMes=m=>{const [y,mo]=m.split("-").map(Number);return `${MESES[mo-1]}${y!==today.getFullYear()?" de "+y:""}`};
+const Nome=m=>{const s=nomeMes(m);return s[0].toUpperCase()+s.slice(1)};
+const uid4=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const MM=m=>(S.mes[m]||={rendas:[],outras:[],gastos:[],fixas:{}});
+
+/* ---------- migração dos dados da planilha (v3 → v4) ---------- */
+function catDoItemAntigo(id){
+  const [g,i]=id.split(":");
+  if(g==="financiamentos")return "Casa e consórcio";
+  if(g==="habitacao")return /supermercado|alimentacao|padaria|restaurantes/.test(i)?"Alimentação":"Moradia e contas";
+  if(g==="saude")return "Saúde";if(g==="transporte")return "Transporte";if(g==="lazer")return "Lazer e viagens";if(g==="bancarias")return "Banco e juros";
+  if(g==="pessoais")return /moveis|eletronicos|decoracao|acessorios-para-casa/.test(i)?"Casa e decoração":"Pessoais";
+  if(g==="dependentes")return i==="mesada-renata"?"Pessoais":"Educação e filhos";
+  return "Outros";
+}
+function migrarV4(){
+  if(S.versao>=4)return false;
+  S.mes||={};S.fixas||=[];S.cfg||={};S.cfg.fontes||=FONTES_PADRAO.map(f=>({...f}));S.cfg.cnpjFonte||={};
+  const v=S.v||{},grupos=S.grupos||[];
+  const descFonte=id=>/seed/.test(id)?"seed":/kroton|catuai/.test(id)?"unopar":"nead";
+  const mapaFonte={seed:"seed",nead:"nead",unopar:"unopar"};
+  Object.keys(v).sort().forEach(m=>{
+    const temReal=Object.values(v[m]).some(o=>o.r);if(!temReal)return;
+    const M=MM(m);M.hist=true;
+    /* rendas */
+    const bruto={},desc={};
+    Object.entries(v[m]).forEach(([k,o])=>{const r=Number(o.r)||0;if(!r)return;
+      if(k.includes("|")){const [f,t]=k.split("|");
+        if(mapaFonte[f]){const tipo=t==="13"?"13":t==="fer"?"ferias":"salario";(bruto[f+"|"+tipo]||=0);bruto[f+"|"+tipo]+=r}
+        else if(f==="renata")M.renata=r2((M.renata||0)+r);
+        else if(f==="bolsa")M.outras.push({id:uid4(),desc:"Bolsa Fund. Araucária",valor:r,recorrente:true});
+        else if(f==="outros")M.outras.push({id:uid4(),desc:"Outras rendas (planilha)",valor:r,recorrente:false});}
+      else if(k.startsWith("descontos:")){const f=descFonte(k);(desc[f]||=0);desc[f]+=r}
+    });
+    Object.entries(bruto).forEach(([ft,b])=>{const [f,tipo]=ft.split("|");const d=tipo==="salario"?r2(desc[f]||0):0;
+      M.rendas.push({id:uid4(),fonte:f,tipo,bruto:r2(b),descontos:d?[{desc:"Descontos (planilha)",valor:d}]:[],liquido:r2(b-d),origem:"planilha",status:"confirmado"})});
+    /* gastos por categoria */
+    const porCat={};
+    grupos.filter(g=>g.tipo==="despesa").forEach(g=>g.itens.forEach(it=>{const r=Number((v[m][it.id]||{}).r)||0;if(r){const c=catDoItemAntigo(it.id);porCat[c]=(porCat[c]||0)+r}}));
+    Object.entries(porCat).forEach(([c,val])=>M.gastos.push({id:uid4(),desc:"Total da planilha",cat:c,valor:r2(val),origem:"planilha"}));
+  });
+  /* contas fixas: itens previstos para novembro que não passam pelo cartão */
+  const viaCartao=new Set(Object.values(FAT_MAPA_PADRAO).concat(["habitacao:netflix","habitacao:claude-ia"]));
+  const ref=Object.keys(v).filter(m=>!Object.values(v[m]).some(o=>o.r)).sort()[0]||Object.keys(v).sort().pop();
+  if(ref)grupos.filter(g=>g.tipo==="despesa").forEach(g=>g.itens.forEach(it=>{
+    if(viaCartao.has(it.id))return;const p=Number((v[ref][it.id]||{}).p)||0;if(p<=0)return;
+    S.fixas.push({id:uid4(),nome:it.nome.replace(/^Pres Casa$/,"Prestação da casa"),cat:catDoItemAntigo(it.id),valor:r2(p)});
+  }));
+  /* mapa de tipos de cartão para categorias */
+  const c=fatCfg();c.cat||={...FAT_CAT_PADRAO};
+  S.versao=4;return true;
 }
 
-/* ---------- topo ---------- */
+/* ---------- cálculos do mês ---------- */
+const fonteNome=id=>((S.cfg.fontes||[]).find(f=>f.id===id)||{}).nome||id;
+function rendasMes(m){
+  const M=S.mes[m]||{},R={itens:[],liquido:0,bruto:0,desc:0,estimado:0,confirmado:0};
+  (M.rendas||[]).forEach(r=>{R.itens.push({nome:`${fonteNome(r.fonte)}${r.tipo==="13"?" · 13º":r.tipo==="ferias"?" · férias":""}`,valor:r.liquido,status:r.status,origem:r.origem,fonte:r.fonte,tipo:r.tipo});R.liquido+=r.liquido;R.bruto+=r.bruto||0;R.desc+=(r.descontos||[]).reduce((a,d)=>a+d.valor,0)});
+  /* estimativas manuais por fonte, quando ainda não há holerite */
+  Object.entries(M.estimativas||{}).forEach(([f,v])=>{if(v&&!(M.rendas||[]).some(r=>r.fonte===f&&r.tipo==="salario")){R.itens.push({nome:fonteNome(f),valor:v,status:"previsto",origem:"manual",fonte:f,tipo:"salario"});R.liquido+=v}});
+  if(M.renata){R.itens.push({nome:"Renda Renata",valor:M.renata,status:"confirmado",origem:"manual"});R.liquido+=M.renata}
+  (M.outras||[]).forEach(o=>{R.itens.push({nome:o.desc,valor:o.valor,status:"confirmado",origem:"manual"});R.liquido+=o.valor});
+  R.itens.forEach(i=>i.status==="previsto"?R.estimado+=i.valor:R.confirmado+=i.valor);
+  ["liquido","bruto","desc","estimado","confirmado"].forEach(k=>R[k]=r2(R[k]));return R;
+}
+const fatCat=t=>(fatCfg().cat||FAT_CAT_PADRAO)[t]||"Outros";
+function gastosMes(m){
+  const M=S.mes[m]||{},G={fixas:0,cartao:0,cartaoParc:0,cartaoVista:0,outros:0,planilha:0,porCat:{},reemb:0,juros:0};
+  const add=(c,v)=>{G.porCat[c]=r2((G.porCat[c]||0)+v)};
+  if(M.hist&&!M.usarDetalhado){(M.gastos||[]).filter(g=>g.origem==="planilha").forEach(g=>{G.planilha+=g.valor;add(g.cat,g.valor);if(g.cat==="Banco e juros")G.juros+=0});}
+  else{
+    S.fixas.forEach(f=>{if(f.ativa===false)return;const o=(M.fixas||{})[f.id];const v=o&&o.valor!=null?o.valor:f.valor;if(!v)return;G.fixas+=v;add(f.cat,v)});
+    (FAT[m]?.itens||[]).forEach(i=>{if(fatEhReemb(i.tipo)){G.reemb+=i.valor;return}G.cartao+=i.valor;i.parcela?G.cartaoParc+=i.valor:G.cartaoVista+=i.valor;add(i.tipo?fatCat(i.tipo):"Outros",i.valor);if(/JUROS/.test(i.tipo||""))G.juros+=i.valor});
+    (M.gastos||[]).filter(g=>g.origem!=="planilha").forEach(g=>{G.outros+=g.valor;add(g.cat,g.valor)});
+  }
+  ["fixas","cartao","cartaoParc","cartaoVista","outros","planilha","reemb","juros"].forEach(k=>G[k]=r2(G[k]));
+  G.total=r2(G.fixas+G.cartao+G.outros+G.planilha);return G;
+}
+const mesTemDados=m=>{const M=S.mes[m];return !!(M&&((M.rendas||[]).length||(M.gastos||[]).length||M.renata||(M.outras||[]).length))||!!(FAT[m]&&FAT[m].itens&&FAT[m].itens.length)};
+
+/* ---------- previsões ---------- */
+function ultimoComFatura(ate){let m=ate;for(let k=0;k<6;k++){if(FAT[m]&&FAT[m].itens&&FAT[m].itens.length)return m;m=addMes(m,-1)}return null}
+function parcelasPrevistas(f){
+  const base=ultimoComFatura(addMes(f,-1));if(!base)return 0;let dist=0,m=base;while(m<f){m=addMes(m,1);dist++}
+  return r2((FAT[base].itens||[]).filter(i=>i.parcela&&!fatEhReemb(i.tipo)&&i.parcela.t-i.parcela.n>=dist).reduce((a,i)=>a+i.valor,0));
+}
+function fixasPrevistas(f){const M=S.mes[f]||{};return r2(S.fixas.reduce((a,x)=>{if(x.ativa===false)return a;const o=(M.fixas||{})[x.id];return a+(o&&o.valor!=null?o.valor:x.valor)},0))}
+function mediaVariavel(f){
+  const det=x=>!(S.mes[x]?.hist&&!S.mes[x]?.usarDetalhado);
+  let meses=[];let m=addMes(f,-1);for(let k=0;k<12&&meses.length<3;k++){if(mesTemDados(m)&&det(m)&&(FAT[m]?.itens||[]).length)meses.push(m);m=addMes(m,-1)}
+  if(!meses.length){
+    const hist=[];m=addMes(f,-1);for(let k=0;k<10&&hist.length<6;k++){if(mesTemDados(m))hist.push(m);m=addMes(m,-1)}
+    if(!hist.length)return {valor:0,base:"sem histórico"};
+    const vs=hist.map(x=>Math.max(0,gastosMes(x).total-fixasPrevistas(f)-parcelasPrevistas(f))).sort((a,b)=>a-b),md=vs.length%2?vs[(vs.length-1)/2]:(vs[vs.length/2-1]+vs[vs.length/2])/2;
+    return {valor:r2(md),base:`mediana de ${hist.length} meses da planilha antiga`,detalhado:false};
+  }
+  if(!meses.length)return {valor:0,base:"sem histórico"};
+  const vals=meses.map(x=>{const G=gastosMes(x);if(S.mes[x]?.hist&&!S.mes[x]?.usarDetalhado)return Math.max(0,G.total-fixasPrevistas(f)-parcelasPrevistas(f));return G.cartaoVista+G.outros});
+  return {valor:r2(vals.reduce((a,b)=>a+b,0)/vals.length),base:`média de ${meses.map(nomeMes).join(", ")}`,detalhado:meses.every(x=>!(S.mes[x]?.hist&&!S.mes[x]?.usarDetalhado))};
+}
+function rendasPrevistas(f){
+  const M=S.mes[f]||{},itens=[];let total=0;
+  (S.cfg.fontes||FONTES_PADRAO).forEach(fo=>{
+    const hol=(M.rendas||[]).filter(r=>r.fonte===fo.id&&r.tipo==="salario");
+    if(hol.length){const v=hol.reduce((a,r)=>a+r.liquido,0);itens.push({nome:fo.nome,valor:v,est:false});total+=v;return}
+    if(M.estimativas&&M.estimativas[fo.id]){itens.push({nome:fo.nome,valor:M.estimativas[fo.id],est:true,manual:true});total+=M.estimativas[fo.id];return}
+    let m=addMes(f,-1);for(let k=0;k<6;k++){const rs=(S.mes[m]?.rendas||[]).filter(r=>r.fonte===fo.id&&r.tipo==="salario");if(rs.length){const v=rs.reduce((a,r)=>a+r.liquido,0);itens.push({nome:fo.nome,valor:v,est:true,ref:m});total+=v;return}m=addMes(m,-1)}
+  });
+  (M.rendas||[]).filter(r=>r.tipo!=="salario").forEach(r=>{itens.push({nome:`${fonteNome(r.fonte)} · ${r.tipo==="13"?"13º":"férias"}`,valor:r.liquido,est:r.status!=="confirmado"});total+=r.liquido});
+  if(M.renata){itens.push({nome:"Renda Renata",valor:M.renata,est:false});total+=M.renata}
+  else{const vs=[];let m=addMes(f,-1);for(let k=0;k<6&&vs.length<3;k++){if(S.mes[m]?.renata)vs.push(S.mes[m].renata);m=addMes(m,-1)}if(vs.length){const v=r2(vs.reduce((a,b)=>a+b,0)/vs.length);itens.push({nome:"Renda Renata",valor:v,est:true});total+=v}}
+  if((M.outras||[]).length)(M.outras||[]).forEach(o=>{itens.push({nome:o.desc,valor:o.valor,est:false});total+=o.valor});
+  else{let m=addMes(f,-1);for(let k=0;k<12;k++){const todas=S.mes[m]?.outras||[];if(todas.length){todas.filter(o=>o.recorrente).forEach(o=>{itens.push({nome:o.desc,valor:o.valor,est:true});total+=o.valor});break}m=addMes(m,-1)}}
+  return {itens,total:r2(total)};
+}
+function previsao(f){
+  const R=rendasPrevistas(f),fix=fixasPrevistas(f),par=parcelasPrevistas(f),med=mediaVariavel(f),meta=(S.mes[f]||{}).meta;
+  const variavel=meta!=null&&meta!==""?Number(meta):med.valor;const saidas=r2(fix+par+variavel),saldo=r2(R.total-saidas);
+  let aval="Realista",motivos=[];
+  if(meta!=null&&meta!==""&&med.valor){if(meta<med.valor*0.9){aval="Otimista";motivos.push(`a meta de gastos do dia a dia (${brl0(meta)}) está abaixo da sua média (${brl0(med.valor)})`)}else if(meta>med.valor*1.1){aval="Conservadora";motivos.push(`a meta de gastos do dia a dia está acima da média (${brl0(med.valor)})`)}}
+  const est=R.itens.filter(i=>i.est);if(est.length)motivos.push(`renda ainda estimada: ${est.map(i=>i.nome).join(", ")}`);
+  if(est.some(i=>i.manual)){const man=est.filter(i=>i.manual);man.forEach(i=>{});}
+  if(!med.detalhado&&!meta)motivos.push("gastos do dia a dia estimados pela planilha antiga (fica mais preciso com 3 meses de faturas importadas)");
+  return {f,R,fix,par,variavel,med,meta,saidas,saldo,aval,motivos};
+}
+
+/* ---------- topo e navegação ---------- */
 $$(".tabs button").forEach(b=>b.onclick=()=>{VIEW=b.dataset.v;render()});
-$$(".mode button").forEach(b=>b.onclick=()=>{MODO=b.dataset.m;render()});
-$("#y-prev").onclick=()=>{ANO--;MODO=null;render()};
-$("#y-next").onclick=()=>{ANO++;MODO=null;render()};
+$("#y-prev").onclick=()=>{ANO--;render()};
+$("#y-next").onclick=()=>{ANO++;render()};
 function topo(){
   $$(".tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===VIEW));
   $("#y-lbl").textContent=ANO;
-  $("#m-btns").innerHTML=MABR.map((n,i)=>`<button data-mi="${i+1}" class="${temReal(mk(ANO,i+1))?"real":""}" aria-pressed="${i+1===MES}" title="${MESES[i]}${temReal(mk(ANO,i+1))?" (com valores reais)":""}">${n}</button>`).join("");
+  $("#m-btns").innerHTML=MABR.map((n,i)=>{const m=mk(ANO,i+1);return `<button data-mi="${i+1}" class="${mesTemDados(m)?"real":""}" aria-pressed="${i+1===MES}" title="${MESES[i]}">${n}</button>`}).join("");
   $("#m-btns button[aria-pressed=true]")?.scrollIntoView({inline:"center",block:"nearest"});
-  $$("#m-btns button").forEach(b=>b.onclick=()=>{MES=+b.dataset.mi;MODO=null;if(VIEW!=="mes"&&VIEW!=="faturas")VIEW="mes";FAT_FILTRO="";render()});
-  const m=mk();if(!MODO)MODO=modoPadrao(m);
-  $(".mode").classList.toggle("hidden",VIEW!=="mes");
-  $$(".mode button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===MODO));
+  $$("#m-btns button").forEach(b=>b.onclick=async()=>{MES=+b.dataset.mi;FAT_FILTRO="";if(VIEW==="inicio"||VIEW==="plano")VIEW="gastos";await fatCarregar(mk());render()});
+  $(".months").classList.toggle("hidden",VIEW==="inicio"||VIEW==="plano"||VIEW==="backup");
 }
 let lembreteAdiado=false;
 function lembreteBackup(){
   const ult=S.settings?.ultimoBackup?new Date(S.settings.ultimoBackup):null;
-  const hoje=new Date(), iniMes=new Date(hoje.getFullYear(),hoje.getMonth(),1);
-  const ant=hoje.getMonth()===0?`${hoje.getFullYear()-1}-12`:`${hoje.getFullYear()}-${String(hoje.getMonth()).padStart(2,"0")}`;
+  const hoje=new Date(),iniMes=new Date(hoje.getFullYear(),hoje.getMonth(),1),ant=addMes(NOW,-1);
   if(!ult)return "Você ainda não baixou nenhum backup em Excel. Ele é a sua garantia caso esqueça a senha.";
-  if(temReal(ant)&&ult<iniMes){const [y,m]=ant.split("-").map(Number);return `${MESES[m-1][0].toUpperCase()+MESES[m-1].slice(1)} terminou. Baixe o Excel para guardar o real do mês fechado.`}
-  const dias=Math.floor((hoje-ult)/86400000);
-  if(dias>=7)return `Faz ${dias} dias desde o último backup em Excel.`;
+  if(mesTemDados(ant)&&ult<iniMes)return `${Nome(ant)} terminou. Baixe o Excel para guardar o mês fechado.`;
+  const dias=Math.floor((hoje-ult)/86400000);if(dias>=7)return `Faz ${dias} dias desde o último backup em Excel.`;
   return null;
 }
 function mostrarLembrete(){
   const el=$("#lembrete"),msg=S&&!lembreteAdiado?lembreteBackup():null;
   el.classList.toggle("hidden",!msg);if(!msg){el.innerHTML="";return}
   el.innerHTML=`<div><span>${esc(msg)}</span><span class="row"><button class="btn sm primary" id="lb-baixar">Baixar Excel agora</button><button class="btn sm" id="lb-depois">Lembrar depois</button></span></div>`;
-  $("#lb-baixar").onclick=exportXlsx;
-  $("#lb-depois").onclick=()=>{lembreteAdiado=true;mostrarLembrete()};
+  $("#lb-baixar").onclick=exportXlsx;$("#lb-depois").onclick=()=>{lembreteAdiado=true;mostrarLembrete()};
 }
-function render(){if(!S)return;charts.forEach(c=>c.destroy());charts=[];topo();mostrarLembrete();({mes:vMes,ano:vAno,faturas:vFaturas,backup:vBackup})[VIEW]()}
+function render(){if(!S)return;charts.forEach(c=>c.destroy());charts=[];topo();mostrarLembrete();({inicio:vInicio,rendas:vRendas,gastos:vGastos,plano:vPlano,backup:vBackup})[VIEW]()}
+async function carregarFaturasRecentes(){const ms=[];for(let k=-4;k<=1;k++)ms.push(addMes(NOW,k));ms.push(mk());await Promise.all([...new Set(ms)].map(fatCarregar))}
 
-/* ---------- tela: mês ---------- */
-function vMes(){
-  const m=mk(), o=MODO==="r"?"p":"r", nomeModo=MODO==="r"?"real":"previsto", nomeOutro=MODO==="r"?"previsto":"real";
-  const T=totais(m,MODO), TO=totais(m,o);
-  const cmp=(a,b)=>`<div class="o">${nomeOutro}: ${brl0(b)}</div>`;
-  /* alertas simples */
-  const A=[];
-  if(T.bruta>0&&T.res<0)A.push(`<div class="alert bad"><b>Faltaram ${brl(-T.res)}</b> no ${nomeModo} de ${MESES[MES-1]}: as saídas passaram da renda líquida.</div>`);
-  if(T.resg>0)A.push(`<div class="alert"><b>${brl(T.resg)} tirados da reserva.</b> Isso não é renda: o mês só fechou porque usou dinheiro guardado.</div>`);
-  const jur=S.grupos.flatMap(g=>g.itens).filter(i=>/juros|iof|multa/i.test(i.nome)).reduce((a,i)=>a+V(m,i.id,MODO),0);
-  if(jur>0)A.push(`<div class="alert bad"><b>${brl(jur)} em juros e multas.</b> Coloque faturas e boletos em débito automático.</div>`);
-  if(MODO==="r"){
-    const acima=S.grupos.filter(g=>g.tipo==="despesa").flatMap(g=>g.itens).map(i=>({n:i.nome,d:V(m,i.id,"r")-V(m,i.id,"p"),p:V(m,i.id,"p")})).filter(x=>x.d>30&&x.d>x.p*0.1).sort((a,b)=>b.d-a.d).slice(0,4);
-    if(acima.length)A.push(`<div class="alert">Acima do previsto: ${acima.map(x=>`<b>${esc(x.n)}</b> (+${brl0(x.d)})`).join(", ")}.</div>`);
-  }
-  const vazio=!temReal(m);
-  let html=`
-  <div class="sum" aria-label="Resumo do mês">
-    <div><div class="k">Renda líquida</div><div class="v">${brl0(T.liq)}</div>${cmp(T.liq,TO.liq)}</div>
-    <div><div class="k">Despesas</div><div class="v">${brl0(T.desp)}</div>${cmp(T.desp,TO.desp)}</div>
-    <div><div class="k">Guardado na reserva</div><div class="v">${brl0(T.aplic)}</div>${cmp(T.aplic,TO.aplic)}</div>
-    <div><div class="k">Resultado do mês</div><div class="v ${T.res<0?"neg":"pos"}">${brl0(T.res)}</div>${cmp(T.res,TO.res)}</div>
-  </div>
-  ${vazio?`<div class="alerts"><div class="alert ok">${MESES[MES-1][0].toUpperCase()+MESES[MES-1].slice(1)} ainda não tem valores reais. <button class="btn sm" id="b-copy">Completar o previsto com o mês anterior</button> <span class="small muted">(só preenche os campos vazios)</span></div></div>`:""}
-  ${A.length?`<div class="alerts" role="status">${A.join("")}</div>`:""}`;
-
-  /* receitas */
-  const ed=EDIT==="fontes";
-  html+=`<section class="sheet" aria-labelledby="h-rec">
-    <div class="sheet-h"><h2 id="h-rec">Receitas: ${nomeModo}</h2><button class="btn link" data-edit="fontes">${ed?"Concluir":"Editar fontes"}</button></div>
-    <div class="tw"><table><thead><tr><th>Fonte</th>${TIPOS_RENDA.map(([,n])=>`<th>${n}</th>`).join("")}<th>Total</th>${ed?"<th></th>":""}</tr></thead><tbody>
-    ${S.fontes.map((f,fi)=>{const tot=TIPOS_RENDA.reduce((a,[t])=>a+V(m,`${f.id}|${t}`,MODO),0);
-      return `<tr><td class="lbl">${ed?`<input class="name" data-fn="${fi}" value="${esc(f.nome)}" aria-label="Nome da fonte">`:esc(f.nome)}</td>
-      ${TIPOS_RENDA.map(([t,n])=>{const k=`${f.id}|${t}`,v=V(m,k,MODO),ov=V(m,k,o);return `<td class="r"><input class="v ${v?"":"zero"}" inputmode="decimal" data-k="${k}" value="${fmtIn(v)}" placeholder="${ov?nf.format(ov):"0,00"}" aria-label="${esc(f.nome)}, ${n}" title="${nomeOutro}: ${brl(ov)}"></td>`}).join("")}
-      <td class="r num"><b>${brl(tot)}</b></td>${ed?`<td><button class="btn sm" data-fdel="${fi}">Remover</button></td>`:""}</tr>`}).join("")}
-    ${ed?`<tr><td colspan="7"><button class="btn sm" id="b-fadd">Adicionar fonte de renda</button></td></tr>`:""}
-    <tr class="tot"><td>Renda bruta</td><td colspan="4"></td><td class="r num">${brl(T.bruta)}</td>${ed?"<td></td>":""}</tr>
-    </tbody></table></div>`;
-  html+=grupoHTML(grupo("descontos"),m,o,nomeOutro,true);
-  html+=`<div class="line-strong"><span>Renda líquida</span><span class="num">${brl(T.liq)}</span></div>
-    <div class="line-soft"><span>Dinheiro tirado da reserva (não conta como renda)</span><input class="v ${T.resg?"":"zero"}" inputmode="decimal" data-k="resgate" value="${fmtIn(T.resg)}" placeholder="0,00" aria-label="Resgate da reserva"></div>
-  </section>`;
-
-  /* despesas */
-  html+=`<section class="sheet" aria-labelledby="h-desp"><div class="sheet-h"><h2 id="h-desp">Despesas: ${nomeModo}</h2><span class="num"><b>${brl(T.desp)}</b> <span class="muted small">${nomeOutro} ${brl(TO.desp)}</span></span></div>
-    ${S.grupos.filter(g=>g.tipo==="despesa").map(g=>grupoHTML(g,m,o,nomeOutro,true)).join("")}</section>`;
-  html+=`<section class="sheet">${grupoHTML(grupo("reserva"),m,o,nomeOutro,true)}</section>`;
-  $("#view").innerHTML=html;
-
-  /* eventos */
-  $$("input.v").forEach(i=>{
-    i.onfocus=()=>{i.select()};
-    i.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();const all=$$("input.v");all[all.indexOf(i)+1]?.focus()}};
-    i.onchange=()=>{const val=parseBR(i.value);setV(m,i.dataset.k,MODO,val);const y=window.scrollY;const id=i.dataset.k;render();window.scrollTo(0,y);}
-  });
-  $$("[data-edit]").forEach(b=>b.onclick=()=>{EDIT=EDIT===b.dataset.edit?null:b.dataset.edit;const y=window.scrollY;render();window.scrollTo(0,y)});
-  $$("[data-fn]").forEach(i=>i.onchange=()=>{S.fontes[+i.dataset.fn].nome=i.value.trim()||S.fontes[+i.dataset.fn].nome;save()});
-  $$("[data-fdel]").forEach(b=>b.onclick=()=>{const f=S.fontes[+b.dataset.fdel];if(confirm(`Remover "${f.nome}"? Os valores lançados para ela em todos os meses serão apagados.`)){S.fontes.splice(+b.dataset.fdel,1);Object.values(S.v).forEach(mv=>Object.keys(mv).forEach(k=>{if(k.startsWith(f.id+"|"))delete mv[k]}));save();render()}});
-  $("#b-fadd")?.addEventListener("click",()=>{const n=prompt("Nome da nova fonte de renda:");if(n&&n.trim()){S.fontes.splice(S.fontes.length-1,0,{id:slug(n)+"-"+Date.now().toString(36),nome:n.trim()});save();render()}});
-  $$("[data-in]").forEach(i=>i.onchange=()=>{const [gi,ii]=i.dataset.in.split(",").map(Number);S.grupos[gi].itens[ii].nome=i.value.trim()||S.grupos[gi].itens[ii].nome;save()});
-  $$("[data-idel]").forEach(b=>b.onclick=()=>{const [gi,ii]=b.dataset.idel.split(",").map(Number);const it=S.grupos[gi].itens[ii];if(confirm(`Remover "${it.nome}"? Os valores dele em todos os meses serão apagados.`)){S.grupos[gi].itens.splice(ii,1);Object.values(S.v).forEach(mv=>delete mv[it.id]);save();render()}});
-  $$("[data-iadd]").forEach(b=>b.onclick=()=>{const g=S.grupos[+b.dataset.iadd];const n=prompt(`Novo item em ${g.nome}:`);if(n&&n.trim()){g.itens.push({id:g.id+":"+slug(n)+"-"+Date.now().toString(36),nome:n.trim()});save();render()}});
-  $$("details.grp").forEach(d=>d.ontoggle=()=>{const f=(S.fechados||={}),g=d.dataset.g,padrao=grupo(g)?.tipo==="desconto",atual=f[g]===undefined?padrao:f[g];if(atual!==!d.open){f[g]=!d.open;save()}});
-  $("#b-copy")?.addEventListener("click",()=>{
-    const ant=MES===1?mk(ANO-1,12):mk(ANO,MES-1),src=S.v[ant]||{};
-    if(!Object.keys(src).length){toast("O mês anterior também está vazio.");return}
-    const dst=(S.v[m]||={});let n=0;Object.entries(src).forEach(([k,o2])=>{const val=o2.r||o2.p;if(val&&k!=="resgate"&&!(dst[k]&&dst[k].p)){(dst[k]||={p:0,r:0}).p=val;n++}});
-    MODO="p";save();render();toast(n?`${n} campos do previsto preenchidos.`:"Nenhum campo vazio para preencher.");
-  });
-}
-function grupoHTML(g,m,o,nomeOutro,collapsible){
-  if(!g)return"";
-  const gi=S.grupos.indexOf(g), ed=EDIT===g.id, tot=g.itens.reduce((a,i)=>a+V(m,i.id,MODO),0), totO=g.itens.reduce((a,i)=>a+V(m,i.id,o),0);
-  const rows=g.itens.map((it,ii)=>{const v=V(m,it.id,MODO),ov=V(m,it.id,o),up=MODO==="r"&&g.tipo==="despesa"&&ov>0&&v>ov*1.1&&v-ov>30;
-    return `<tr><td class="lbl">${ed?`<input class="name" data-in="${gi},${ii}" value="${esc(it.nome)}" aria-label="Nome do item">`:esc(it.nome)}</td>
-    <td class="r"><input class="v ${v?"":"zero"}" inputmode="decimal" data-k="${it.id}" value="${fmtIn(v)}" placeholder="${ov?nf.format(ov):"0,00"}" aria-label="${esc(it.nome)}"></td>
-    <td class="ref ${up?"up":""}">${ov?`${nomeOutro} ${nf.format(ov)}`:""}</td>${ed?`<td><button class="btn sm" data-idel="${gi},${ii}">Remover</button></td>`:""}</tr>`}).join("");
-  const table=`<div class="tw"><table><tbody>${rows}
-    <tr><td colspan="${ed?4:3}"><button class="btn link" data-edit="${g.id}">${ed?"Concluir":"Editar itens"}</button>${ed?` <button class="btn sm" data-iadd="${gi}">Adicionar item</button>`:""}</td></tr></tbody></table></div>`;
-  if(!collapsible)return `<div class="sheet-h" style="border-top:1px solid var(--line)"><h3>${esc(g.nome)}</h3><span class="num">${brl(tot)}</span></div>${table}`;
-  const fc=(S.fechados||{})[g.id], open = fc===undefined ? g.tipo!=="desconto" : !fc;
-  return `<details class="grp" data-g="${g.id}" ${open?"open":""}><summary><span>${esc(g.nome)}</span><span class="muted small num">${nomeOutro} ${brl0(totO)}</span><span class="num">${brl(tot)}</span></summary>${table}</details>`;
-}
-
-/* ---------- tela: ano ---------- */
-function linhasAno(){
-  let acc=0;
-  return Array.from({length:12},(_,i)=>{const m=mk(ANO,i+1),modo=temReal(m)?"r":"p",T=totais(m,modo);acc=r2(acc+T.res);return {m,i,modo,T,acc}});
-}
-function vAno(){
-  const L=linhasAno(), real=L.filter(x=>x.modo==="r");
-  const sum=k=>r2(real.reduce((a,x)=>a+x.T[k],0));
+/* ---------- INÍCIO ---------- */
+function corSaldo(v){return v<0?"var(--red)":v<300?"#B9782A":"var(--green)"}
+function vInicio(){
+  const atual=NOW,prox=[1,2,3].map(k=>previsao(addMes(atual,k))),Rh=rendasMes(atual),Gh=gastosMes(atual);
+  /* mês de referência para o diagnóstico: o atual, se já tiver gastos; senão o anterior */
+  const ref=Gh.total>0?atual:addMes(atual,-1),R=rendasMes(ref),G=gastosMes(ref);
+  const medCat={};const mesesAnt=[1,2,3].map(k=>addMes(ref,-k)).filter(mesTemDados);
+  mesesAnt.forEach(m=>{const g=gastosMes(m);Object.entries(g.porCat).forEach(([c,v])=>medCat[c]=(medCat[c]||0)+v/mesesAnt.length)});
+  const cats=Object.entries(G.porCat).sort((a,b)=>b[1]-a[1]);
+  const alertas=[];
+  prox.forEach(p=>{if(p.saldo<0)alertas.push({n:"bad",t:`${Nome(p.f)}: previsão de faltar ${brl0(-p.saldo)}`,d:"Reveja os gastos do dia a dia desse mês ou antecipe uma reserva."})});
+  cats.forEach(([c,v])=>{const md=medCat[c];if(md&&v>md*1.15&&v-md>150)alertas.push({n:"warn",t:`${c}: ${brl0(v)} em ${nomeMes(ref)}, ${Math.round((v/md-1)*100)}% acima da média`,d:`A média dos meses anteriores é ${brl0(md)}.`})});
+  if(G.juros>0)alertas.push({n:"bad",t:`${brl(G.juros)} em juros e IOF nos cartões`,d:"Pague as faturas em dia e evite compras no exterior sem necessidade."});
+  if(G.reemb>0)alertas.push({n:"info",t:`${brl0(G.reemb)} de gastos de terceiros nos cartões`,d:"Confirme se já foram reembolsados."});
+  const semHol=prox.flatMap(p=>p.R.itens.filter(i=>i.est&&/13º|férias/.test(i.nome)).map(i=>`${i.nome} (${nomeMes(p.f)})`));
+  if(semHol.length)alertas.push({n:"info",t:"13º e férias ainda sem holerite",d:semHol.join(", ")+". Quando o holerite chegar, importe para confirmar o valor."});
+  const comprom=R.liquido?((G.porCat["Casa e consórcio"]||0)+parcelasPrevistas(addMes(ref,1)))/R.liquido:0;
+  if(comprom>0.35)alertas.push({n:"warn",t:`Dívidas e parcelas comprometem ${Math.round(comprom*100)}% da renda`,d:"Acima de 30% o orçamento fica sem folga. Evite novos parcelamentos."});
+  const saldoRef=r2(R.liquido-G.total);
   $("#view").innerHTML=`
-  <div class="sum">
-    <div><div class="k">Renda líquida no ano (real)</div><div class="v">${brl0(sum("liq"))}</div><div class="o">${real.length} meses fechados</div></div>
-    <div><div class="k">Despesas no ano (real)</div><div class="v">${brl0(sum("desp"))}</div><div class="o">média ${brl0(real.length?sum("desp")/real.length:0)}/mês</div></div>
-    <div><div class="k">Tirado da reserva</div><div class="v">${brl0(sum("resg"))}</div><div class="o">não conta como renda</div></div>
-    <div><div class="k">Acumulado até dezembro</div><div class="v ${L[11].acc<0?"neg":"pos"}">${brl0(L[11].acc)}</div><div class="o">real + previsto dos meses abertos</div></div>
-  </div>
-  <section class="sheet"><div class="sheet-h"><h2>Mês a mês</h2><span class="muted small">Meses com valores reais usam o real; os demais, o previsto.</span></div>
-  <div class="tw"><table><thead><tr><th>Mês</th><th>Base</th><th>Renda bruta</th><th>Descontos</th><th>Renda líquida</th><th>Despesas</th><th>Reserva</th><th>Resultado</th><th>Acumulado</th></tr></thead><tbody>
-  ${L.map(x=>`<tr><td><button class="btn link" data-goto="${x.i+1}" style="text-transform:capitalize">${MESES[x.i]}</button></td><td class="r small muted">${x.modo==="r"?"real":"previsto"}</td>
-    <td class="r num">${brl(x.T.bruta)}</td><td class="r num">${brl(x.T.desc)}</td><td class="r num">${brl(x.T.liq)}</td><td class="r num">${brl(x.T.desp)}</td><td class="r num">${brl(x.T.aplic)}</td>
-    <td class="r num ${x.T.res<0?"neg":""}">${brl(x.T.res)}</td><td class="r num ${x.acc<0?"neg":""}">${brl(x.acc)}</td></tr>`).join("")}
-  </tbody></table></div></section>
-  <div class="cols">
-    <section class="sheet"><div class="sheet-h"><h2>Renda líquida e despesas</h2></div><div class="chart"><canvas id="c1" aria-label="Gráfico de renda líquida e despesas por mês"></canvas></div></section>
-    <section class="sheet"><div class="sheet-h"><h2>Para onde foram as despesas</h2><span class="muted small">meses reais</span></div><div class="chart"><canvas id="c2" aria-label="Gráfico de despesas por grupo"></canvas></div></section>
-  </div>`;
-  $$("[data-goto]").forEach(b=>b.onclick=()=>{MES=+b.dataset.goto;VIEW="mes";MODO=null;render()});
-  const cf=configsGraficos(false);charts.push(new Chart($("#c1"),cf.c1),new Chart($("#c2"),cf.c2));
+  <section class="panel" style="padding:22px">
+    <h1 style="font-size:1.5rem;margin-bottom:6px">${G.total?`Em ${nomeMes(ref)}, ${saldoRef>=0?`<span class="pos">sobraram ${brl0(saldoRef)}</span>`:`<span class="neg">faltaram ${brl0(-saldoRef)}</span>`}`:`Sem lançamentos em ${nomeMes(ref)}`}</h1>
+    <p class="muted">Entraram ${brl0(R.liquido)} líquidos e saíram ${brl0(G.total)}${G.reemb?` (fora ${brl0(G.reemb)} de terceiros)`:""}.</p>
+  </section>
+  <h2 style="margin:4px 0 10px">Próximos meses</h2>
+  <div class="cards3">${prox.map(p=>`<div class="mcard" style="border-top:5px solid ${corSaldo(p.saldo)}">
+      <div class="small muted">${Nome(p.f)}</div>
+      <div class="v" style="color:${corSaldo(p.saldo)}">${p.saldo>=0?"Sobra":"Falta"} ${brl0(Math.abs(p.saldo))}</div>
+      <div class="small">Entra ${brl0(p.R.total)} · sai ${brl0(p.saidas)}</div>
+      <div class="small" style="margin-top:6px"><span class="pill ${p.aval==="Otimista"?"warn":p.aval==="Conservadora"?"ok":""}">Previsão ${p.aval.toLowerCase()}</span></div>
+      ${p.motivos.length?`<div class="small muted" style="margin-top:6px">${esc(p.motivos[0])}</div>`:""}
+    </div>`).join("")}</div>
+  ${alertas.length?`<section class="panel"><h2 style="margin-bottom:10px">Atenção</h2>${alertas.map(a=>`<div class="alert ${a.n==="bad"?"bad":a.n==="info"?"info":""}"><b>${esc(a.t)}</b><br><span class="small">${esc(a.d)}</span></div>`).join("")}</section>`:`<section class="panel"><div class="alert ok"><b>Tudo em ordem.</b> Nenhum alerta para os próximos meses.</div></section>`}
+  <section class="panel"><div class="panel-h"><h2>Para onde foi o dinheiro em ${nomeMes(ref)}</h2><span class="small muted">comparado com a média dos 3 meses anteriores</span></div>
+    ${cats.length?cats.map(([c,v])=>{const md=medCat[c],dif=md?Math.round((v/md-1)*100):null,pr=R.liquido?v/R.liquido:0;return `<div class="catrow"><span class="dot" style="background:${CAT_COR[c]||"#999"}"></span><span class="nm">${esc(c)}</span><span class="bar"><span style="width:${Math.min(100,pr*100)}%;background:${CAT_COR[c]||"#999"}"></span></span><span class="num r">${brl0(v)}</span><span class="small muted r">${Math.round(pr*100)}% da renda</span><span class="small r" style="color:${dif>15?"var(--red)":dif<-15?"var(--green)":"var(--muted)"}">${dif==null?"":(dif>0?"+":"")+dif+"%"}</span></div>`}).join(""):'<p class="muted">Importe as faturas e lance os gastos para ver o diagnóstico.</p>'}
+  </section>`;
 }
-const CORES=["--blue","--ochre","--teal","--violet","--green","--red"];
-function configsGraficos(estatico){
-  const ink=cssVar("--ink"),mut=cssVar("--muted"),line=cssVar("--line");
-  Chart.defaults.color=mut;Chart.defaults.borderColor=line;Chart.defaults.font.family="Public Sans, system-ui, sans-serif";
-  const L=linhasAno();
-  const base={responsive:!estatico,maintainAspectRatio:false,animation:estatico?false:{duration:300},plugins:{legend:{labels:{boxWidth:12,color:ink}},tooltip:{callbacks:{label:c=>`${c.dataset.label||c.label}: ${brl(c.raw)}`}}}};
-  const prevAlpha=(cor,x)=>x.modo==="r"?cor:cor+"66";
-  const c1={type:"bar",data:{labels:MABR,datasets:[
-    {label:"Renda líquida",data:L.map(x=>x.T.liq),backgroundColor:L.map(x=>prevAlpha(cssVar("--blue"),x)),borderRadius:3},
-    {label:"Despesas + reserva",data:L.map(x=>x.T.desp+x.T.aplic),backgroundColor:L.map(x=>prevAlpha(cssVar("--ochre"),x)),borderRadius:3},
-    {label:"Acumulado",type:"line",data:L.map(x=>x.acc),borderColor:ink,pointBackgroundColor:L.map(x=>x.acc<0?cssVar("--red"):cssVar("--green")),tension:.25}]},
-    options:{...base,scales:{y:{ticks:{callback:v=>brl0(v)}},x:{grid:{display:false}}}}};
-  const gs=S.grupos.filter(g=>g.tipo==="despesa"), real=L.filter(x=>x.modo==="r");
-  const vals=gs.map(g=>r2(real.reduce((a,x)=>a+(x.T.porGrupo[g.id]||0),0)));
-  const pal=["#2C5A86","#B9782A","#3F7880","#6E5687","#5B8C5A","#C9A227","#8A6A4F","#B8607F","#7C858C"];
-  const c2={type:"doughnut",data:{labels:gs.map(g=>g.nome),datasets:[{data:vals,backgroundColor:gs.map((_,i)=>pal[i%pal.length]),borderColor:cssVar("--surface"),borderWidth:2}]},
-    options:{...base,cutout:"55%",plugins:{...base.plugins,legend:{position:"bottom",labels:{boxWidth:10,color:ink}}}}};
-  return {c1,c2};
+
+/* ---------- RENDAS ---------- */
+function vRendas(){
+  const m=mk(),M=MM(m),R=rendasMes(m),P=rendasPrevistas(m);
+  const fontes=S.cfg.fontes||FONTES_PADRAO;
+  const holHTML=r=>`<details class="hol"><summary><span>${r.origem==="holerite"?"Holerite":r.origem==="manual"?"Informado por você":"Planilha antiga"}${r.tipo!=="salario"?` · ${r.tipo==="13"?"13º":"férias"}`:""}${r.status!=="confirmado"?" · previsto":""}</span><span class="small muted">bruto ${brl(r.bruto)} − descontos ${brl((r.descontos||[]).reduce((a,d)=>a+d.valor,0))}</span><span class="num"><b>${brl(r.liquido)}</b></span></summary>
+    <div class="tw"><table><tbody>${(r.rubricas||[]).map(x=>`<tr><td>${esc(x.desc)}</td><td class="r num" style="color:${x.lado==="d"?"var(--red)":"inherit"}">${x.lado==="d"?"−":""}${brl(x.valor)}</td></tr>`).join("")||(r.descontos||[]).map(d=>`<tr><td>${esc(d.desc)}</td><td class="r num" style="color:var(--red)">−${brl(d.valor)}</td></tr>`).join("")}</tbody></table></div>
+    <div class="row" style="padding:6px 0"><button class="btn sm" data-rdel="${r.id}">Remover</button>${r.confere&&!(r.confere.proventos&&r.confere.descontos&&r.confere.liquido)?'<span class="small neg">A soma das linhas não bateu com os totais do holerite: confira.</span>':(r.origem==="holerite"?'<span class="small pos">✓ Somas conferidas com os totais do holerite</span>':"")}</div></details>`;
+  $("#view").innerHTML=`
+  <div class="sum3"><div><div class="k">Renda líquida de ${nomeMes(m)}</div><div class="v">${brl0(R.liquido)}</div></div>
+    <div><div class="k">Bruto</div><div class="v">${brl0(R.bruto)}</div></div><div><div class="k">Descontos em folha</div><div class="v">${brl0(R.desc)}</div></div></div>
+  <section class="panel"><div class="panel-h"><h2>Holerites</h2><div class="row"><button class="btn primary" id="hImp">Importar holerites (PDF)</button><input type="file" id="hImpF" accept="application/pdf,.pdf" multiple hidden></div></div>
+    <p class="small muted" style="margin-top:-4px">O sistema lê proventos, descontos e líquido, confere as somas e identifica 13º e férias. A leitura acontece no seu computador.</p>
+    <div id="hRev"></div>
+    ${fontes.map(fo=>{const hs=(M.rendas||[]).filter(r=>r.fonte===fo.id&&r.tipo==="salario");const prev=P.itens.find(i=>i.nome===fo.nome);
+      return `<div class="fonte"><div class="fonte-h"><h3>${esc(fo.nome)}</h3>${hs.length?`<span class="num"><b>${brl(hs.reduce((a,r)=>a+r.liquido,0))}</b></span>`:`<label class="small" style="display:flex;gap:6px;align-items:center">Sem holerite. Valor líquido esperado: <input class="v" inputmode="decimal" data-est="${fo.id}" value="${M.estimativas&&M.estimativas[fo.id]?nf.format(M.estimativas[fo.id]):""}" placeholder="${prev?nf.format(prev.valor):"0,00"}"></label>`}</div>${hs.map(holHTML).join("")}</div>`}).join("")}
+  </section>
+  <section class="panel"><h2 style="margin-bottom:8px">Renda Renata</h2>
+    <label class="small" style="display:flex;gap:8px;align-items:center">Valor recebido em ${nomeMes(m)}: <input class="v" inputmode="decimal" id="rRen" value="${M.renata?nf.format(M.renata):""}" placeholder="0,00"></label></section>
+  <section class="panel"><div class="panel-h"><h2>Outras rendas</h2><span class="small muted">bolsa, estágio, bicos…</span></div>
+    ${(M.outras||[]).map(o=>`<div class="lin"><span>${esc(o.desc)}${o.recorrente?' <span class="pill">todo mês</span>':""}</span><span class="num">${brl(o.valor)}</span><button class="btn sm" data-odel="${o.id}">×</button></div>`).join("")||'<p class="small muted">Nenhuma neste mês.</p>'}
+    <div class="row" style="margin-top:10px"><input type="text" id="oDesc" placeholder="Descrição" style="flex:2;min-width:160px"><input class="v" inputmode="decimal" id="oVal" placeholder="Valor"><label class="small"><input type="checkbox" id="oRec"> repete todo mês</label><button class="btn" id="oAdd">Adicionar</button></div></section>
+  <section class="panel"><div class="panel-h"><h2>13º salário e férias</h2><span class="small muted">com ou sem holerite</span></div>
+    <p class="small muted" style="margin-top:-4px">Informe aqui o que você espera receber neste mês. Sem holerite, o valor entra nas previsões como estimativa; quando o holerite chegar, importe para confirmar.</p>
+    ${(M.rendas||[]).filter(r=>r.tipo!=="salario").map(r=>`<div class="lin"><span>${esc(fonteNome(r.fonte))} · ${r.tipo==="13"?"13º":"férias"} ${r.status==="confirmado"?'<span class="pill ok">confirmado</span>':'<span class="pill warn">previsto</span>'}</span><span class="num">${brl(r.liquido)}</span><button class="btn sm" data-rdel="${r.id}">×</button></div>`).join("")||'<p class="small muted">Nada informado neste mês.</p>'}
+    <div class="row" style="margin-top:10px"><select id="eFonte" style="width:auto">${fontes.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join("")}</select><select id="eTipo" style="width:auto"><option value="13">13º salário</option><option value="ferias">Férias</option></select><input class="v" inputmode="decimal" id="eVal" placeholder="Valor líquido"><button class="btn" id="eAdd">Adicionar previsão</button></div></section>`;
+  const atual=()=>{save();const y=scrollY;vRendas();scrollTo(0,y)};
+  $("#hImp").onclick=()=>$("#hImpF").click();
+  $("#hImpF").onchange=async e=>{const fs=[...e.target.files];e.target.value="";if(fs.length)await holImportar(fs)};
+  $$("[data-est]").forEach(i=>i.onchange=()=>{(M.estimativas||={})[i.dataset.est]=parseBR(i.value)||0;atual()});
+  $("#rRen").onchange=e=>{M.renata=parseBR(e.target.value)||0;atual()};
+  $$("[data-odel]").forEach(b=>b.onclick=()=>{M.outras=M.outras.filter(o=>o.id!==b.dataset.odel);atual()});
+  $("#oAdd").onclick=()=>{const d=$("#oDesc").value.trim(),v=parseBR($("#oVal").value);if(!d||!v)return;(M.outras||=[]).push({id:uid4(),desc:d,valor:v,recorrente:$("#oRec").checked});atual()};
+  $$("[data-rdel]").forEach(b=>b.onclick=()=>{if(confirm("Remover este lançamento de renda?")){M.rendas=M.rendas.filter(r=>r.id!==b.dataset.rdel);atual()}});
+  $("#eAdd").onclick=()=>{const v=parseBR($("#eVal").value);if(!v)return;M.rendas.push({id:uid4(),fonte:$("#eFonte").value,tipo:$("#eTipo").value,bruto:v,descontos:[],liquido:v,origem:"manual",status:"previsto"});atual()};
 }
+async function holImportar(arquivos){
+  const box=$("#hRev");box.innerHTML='<p class="muted">Lendo…</p>';const res=[];
+  for(const f of arquivos){
+    try{
+      await fatPdfJs();const t=pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())});
+      t.onPassword=(up,mot)=>{const p=prompt(mot===2?"Senha incorreta. Tente de novo:":`O holerite "${f.name}" tem senha. Digite:`);p===null?t.destroy():up(p)};
+      const doc=await t.promise,pags=[];let n=0;
+      for(let p=1;p<=doc.numPages;p++){const pg=await doc.getPage(p),vp=pg.getViewport({scale:1}),tc=await pg.getTextContent();const it=tc.items.filter(i=>i.str&&i.str.trim()).map(i=>({s:i.str,x:i.transform[4],y:vp.height-i.transform[5],w:i.width}));n+=it.length;pags.push({items:it,width:vp.width})}
+      if(!n){res.push({nome:f.name,erro:"este PDF não tem texto (foi salvo como imagem). Use o PDF original do portal da empresa."});continue}
+      const r=holInterpretar(pags);if(!r.ok){res.push({nome:f.name,erro:"não reconheci a tabela de proventos e descontos.",linhas:r.linhas});continue}
+      res.push({nome:f.name,r,fonte:r.fonte?r.fonte.toLowerCase():(S.cfg.cnpjFonte[r.cnpj]||""),mes:r.mes||mk()});
+    }catch(e){res.push({nome:f.name,erro:"não foi possível abrir este PDF."})}
+  }
+  const fontes=S.cfg.fontes||FONTES_PADRAO;
+  box.innerHTML=res.map((x,i)=>x.erro?`<div class="alert bad"><b>${esc(x.nome)}:</b> ${esc(x.erro)}${x.linhas?`<details><summary class="small">ver texto extraído</summary><pre class="small" style="white-space:pre-wrap">${esc(fatMascarar(x.linhas.join("\n")))}</pre></details>`:""}</div>`:
+    `<div class="alert ${x.r.confere.proventos&&x.r.confere.descontos&&x.r.confere.liquido?"ok":""}"><b>${esc(x.nome)}</b>: bruto ${brl(x.r.bruto)} · descontos ${brl(x.r.descontos)} · <b>líquido ${brl(x.r.liquido)}</b>${x.r.tipo!=="salario"?` · ${x.r.tipo==="13"?"13º salário":"férias"}`:""} ${x.r.confere.proventos&&x.r.confere.descontos&&x.r.confere.liquido?"✓ somas conferidas":"⚠ as somas não bateram: confira"}
+      <div class="row" style="margin-top:8px"><label class="small">Vínculo <select data-hf="${i}" style="width:auto"><option value="">Escolha…</option>${fontes.map(f=>`<option value="${f.id}" ${x.fonte===f.id?"selected":""}>${esc(f.nome)}</option>`).join("")}</select></label>
+      <label class="small">Mês <input type="month" data-hm="${i}" value="${x.mes}"></label>
+      <label class="small">Tipo <select data-ht="${i}" style="width:auto"><option value="salario" ${x.r.tipo==="salario"?"selected":""}>Salário</option><option value="13" ${x.r.tipo==="13"?"selected":""}>13º</option><option value="ferias" ${x.r.tipo==="ferias"?"selected":""}>Férias</option></select></label></div></div>`).join("")+
+    (res.some(x=>!x.erro)?`<div class="row" style="margin:8px 0 14px"><button class="btn primary" id="hConf">Guardar holerites</button><button class="btn" id="hCanc">Cancelar</button></div>`:"");
+  $("#hCanc")?.addEventListener("click",()=>box.innerHTML="");
+  $("#hConf")?.addEventListener("click",()=>{
+    let n=0,falta=0;
+    res.forEach((x,i)=>{if(x.erro)return;const f=$(`[data-hf="${i}"]`).value,mes=$(`[data-hm="${i}"]`).value||mk(),tipo=$(`[data-ht="${i}"]`).value;if(!f){falta++;return}
+      if(x.r.cnpj)S.cfg.cnpjFonte[x.r.cnpj]=f;
+      const M=MM(mes);
+      const dup=M.rendas.some(r=>r.origem==="holerite"&&r.fonte===f&&r.tipo===tipo&&Math.abs(r.liquido-x.r.liquido)<0.01);if(dup)return;
+      if(tipo!=="salario")M.rendas=M.rendas.filter(r=>!(r.fonte===f&&r.tipo===tipo&&r.status==="previsto"));
+      if(M.hist)M.rendas=M.rendas.filter(r=>!(r.origem==="planilha"&&r.fonte===f&&r.tipo===tipo));
+      if(M.estimativas)delete M.estimativas[f];
+      M.rendas.push({id:uid4(),fonte:f,tipo,bruto:x.r.bruto,descontos:x.r.rubricas.filter(r=>r.lado==="d").map(r=>({desc:r.desc,valor:r.valor})),rubricas:x.r.rubricas,liquido:x.r.liquido,origem:"holerite",status:"confirmado",confere:x.r.confere});n++});
+    if(falta){alert(`Escolha o vínculo de ${falta} holerite(s) antes de guardar.`);return}
+    save();toast(`${n} holerite(s) guardado(s)`);vRendas();
+  });
+}
+
+/* ---------- GASTOS ---------- */
+let GSUB="cartoes";
+async function vGastos(){
+  const m=mk();await fatCarregar(m);if(VIEW!=="gastos"||m!==mk())return;
+  const M=MM(m),G=gastosMes(m);
+  $("#view").innerHTML=`
+  ${M.hist&&(FAT[m]?.itens||[]).length?`<div class="alert"><b>${Nome(m)} veio da planilha antiga e também tem faturas importadas.</b> Para não contar duas vezes, escolha a fonte dos gastos deste mês:
+     <div class="row" style="margin-top:6px"><button class="btn sm ${!M.usarDetalhado?"primary":""}" id="gPlan">Usar os totais da planilha</button><button class="btn sm ${M.usarDetalhado?"primary":""}" id="gDet">Usar faturas + contas fixas + outros</button></div></div>`:""}
+  <div class="sum4"><div><div class="k">Total de gastos</div><div class="v">${brl0(G.total)}</div></div>
+    ${M.hist&&!M.usarDetalhado?`<div><div class="k">Da planilha antiga</div><div class="v">${brl0(G.planilha)}</div></div>`:`<div><div class="k">Contas fixas</div><div class="v">${brl0(G.fixas)}</div></div><div><div class="k">Cartões (família)</div><div class="v">${brl0(G.cartao)}</div></div><div><div class="k">Outros gastos</div><div class="v">${brl0(G.outros)}</div></div>`}</div>
+  <div class="subtabs" role="group" aria-label="Tipo de gasto"><button data-g="cartoes" aria-pressed="${GSUB==="cartoes"}">Cartões</button><button data-g="fixas" aria-pressed="${GSUB==="fixas"}">Contas fixas</button><button data-g="outros" aria-pressed="${GSUB==="outros"}">Outros gastos</button>${M.hist?`<button data-g="planilha" aria-pressed="${GSUB==="planilha"}">Planilha antiga</button>`:""}</div>
+  <div id="gsub"></div>`;
+  $("#gPlan")?.addEventListener("click",()=>{M.usarDetalhado=false;save();vGastos()});
+  $("#gDet")?.addEventListener("click",()=>{M.usarDetalhado=true;save();vGastos()});
+  $$(".subtabs button").forEach(b=>b.onclick=()=>{GSUB=b.dataset.g;vGastos()});
+  if(GSUB==="cartoes")vFaturas();else if(GSUB==="fixas")vFixas();else if(GSUB==="outros")vOutros();else vPlanilhaAntiga();
+}
+function vFixas(){
+  const m=mk(),M=MM(m);
+  $("#gsub").innerHTML=`<section class="sheet"><div class="sheet-h"><h2>Contas fixas de ${nomeMes(m)}</h2><span class="small muted">o valor vale só para este mês; para mudar sempre, edite o valor padrão</span></div>
+    <div class="tw"><table class="fat"><colgroup><col><col style="width:170px"><col style="width:130px"><col style="width:130px"><col style="width:80px"><col style="width:54px"></colgroup>
+    <thead><tr><th>Conta</th><th>Categoria</th><th class="r">Valor padrão</th><th class="r">Neste mês</th><th>Paga</th><th></th></tr></thead><tbody>
+    ${S.fixas.map(f=>{const o=(M.fixas||{})[f.id]||{};return `<tr style="${f.ativa===false?"opacity:.5":""}"><td><input class="name" data-fn="${f.id}" value="${esc(f.nome)}"></td>
+      <td><select data-fc="${f.id}" style="width:100%">${CATS.map(c=>`<option ${f.cat===c?"selected":""}>${c}</option>`).join("")}</select></td>
+      <td class="r"><input class="v" inputmode="decimal" data-fv="${f.id}" value="${nf.format(f.valor)}"></td>
+      <td class="r"><input class="v" inputmode="decimal" data-fm="${f.id}" value="${o.valor!=null?nf.format(o.valor):""}" placeholder="${nf.format(f.valor)}"></td>
+      <td><input type="checkbox" data-fp="${f.id}" ${o.pago?"checked":""} aria-label="Paga"></td>
+      <td><button class="btn sm" data-fx="${f.id}" aria-label="Remover conta">×</button></td></tr>`}).join("")}
+    </tbody></table></div>
+    <div class="row" style="padding:12px 16px"><input type="text" id="nfNome" placeholder="Nova conta (ex.: Internet)" style="flex:2;min-width:160px"><select id="nfCat" style="width:auto">${CATS.map(c=>`<option>${c}</option>`).join("")}</select><input class="v" inputmode="decimal" id="nfVal" placeholder="Valor"><button class="btn" id="nfAdd">Adicionar conta fixa</button></div></section>`;
+  const def=id=>S.fixas.find(f=>f.id===id),reg=()=>{save();const y=scrollY;vGastos().then(()=>scrollTo(0,y))};
+  $$("[data-fn]").forEach(i=>i.onchange=()=>{def(i.dataset.fn).nome=i.value.trim()||def(i.dataset.fn).nome;save()});
+  $$("[data-fc]").forEach(i=>i.onchange=()=>{def(i.dataset.fc).cat=i.value;reg()});
+  $$("[data-fv]").forEach(i=>i.onchange=()=>{def(i.dataset.fv).valor=parseBR(i.value);reg()});
+  $$("[data-fm]").forEach(i=>i.onchange=()=>{const o=((M.fixas||={})[i.dataset.fm]||={});o.valor=i.value.trim()===""?null:parseBR(i.value);reg()});
+  $$("[data-fp]").forEach(i=>i.onchange=()=>{const o=((M.fixas||={})[i.dataset.fp]||={});o.pago=i.checked;save()});
+  $$("[data-fx]").forEach(b=>b.onclick=()=>{const f=def(b.dataset.fx);if(confirm(`Remover "${f.nome}" das contas fixas? (os meses antigos não mudam)`)){S.fixas=S.fixas.filter(x=>x!==f);reg()}});
+  $("#nfAdd").onclick=()=>{const n=$("#nfNome").value.trim(),v=parseBR($("#nfVal").value);if(!n)return;S.fixas.push({id:uid4(),nome:n,cat:$("#nfCat").value,valor:v});reg()};
+}
+function vOutros(){
+  const m=mk(),M=MM(m),its=(M.gastos||[]).filter(g=>g.origem!=="planilha");
+  $("#gsub").innerHTML=`<section class="sheet"><div class="sheet-h"><h2>Outros gastos de ${nomeMes(m)}</h2><span class="small muted">o que não passou no cartão nem é conta fixa: Pix, dinheiro, boletos avulsos</span></div>
+    <div style="padding:12px 16px">
+    ${its.map(g=>`<div class="lin"><span>${esc(g.desc)} <span class="small muted">· ${esc(g.cat)}</span></span><span class="num">${brl(g.valor)}</span><button class="btn sm" data-gdel="${g.id}">×</button></div>`).join("")||'<p class="small muted">Nenhum gasto avulso neste mês.</p>'}
+    <div class="row" style="margin-top:10px"><input type="text" id="ngDesc" placeholder="Descrição (ex.: conserto do portão)" style="flex:2;min-width:180px"><select id="ngCat" style="width:auto">${CATS.map(c=>`<option>${c}</option>`).join("")}</select><input class="v" inputmode="decimal" id="ngVal" placeholder="Valor"><button class="btn" id="ngAdd">Adicionar</button></div></div></section>`;
+  const reg=()=>{save();const y=scrollY;vGastos().then(()=>scrollTo(0,y))};
+  $$("[data-gdel]").forEach(b=>b.onclick=()=>{M.gastos=M.gastos.filter(g=>g.id!==b.dataset.gdel);reg()});
+  $("#ngAdd").onclick=()=>{const d=$("#ngDesc").value.trim(),v=parseBR($("#ngVal").value);if(!d||!v)return;(M.gastos||=[]).push({id:uid4(),desc:d,cat:$("#ngCat").value,valor:v});reg()};
+}
+function vPlanilhaAntiga(){
+  const m=mk(),its=(MM(m).gastos||[]).filter(g=>g.origem==="planilha").sort((a,b)=>b.valor-a.valor);
+  $("#gsub").innerHTML=`<section class="sheet"><div class="sheet-h"><h2>Totais da planilha antiga · ${nomeMes(m)}</h2><span class="small muted">histórico migrado, somente leitura</span></div><div style="padding:12px 16px">${its.map(g=>`<div class="lin"><span><span class="dot" style="background:${CAT_COR[g.cat]}"></span>${esc(g.cat)}</span><span class="num">${brl(g.valor)}</span><span></span></div>`).join("")||'<p class="muted">Sem dados.</p>'}</div></section>`;
+}
+
+/* ---------- PLANEJAMENTO ---------- */
+function vPlano(){
+  const meses=Array.from({length:12},(_,k)=>addMes(NOW,k+1)),ps=meses.map(previsao);let acc=0;
+  $("#view").innerHTML=`<section class="panel"><div class="panel-h"><h2>Próximos 12 meses</h2><span class="small muted">calculado sozinho; ajuste a meta de gastos do dia a dia se quiser</span></div>
+    <p class="small muted" style="margin-top:-4px"><b>Como é calculado:</b> rendas (último holerite de cada vínculo, Renda Renata média, outras rendas que se repetem, 13º e férias informados) − contas fixas − parcelas de cartão já assumidas − gastos do dia a dia (média dos últimos meses ou a sua meta).</p>
+    <div class="tw"><table class="plan"><thead><tr><th>Mês</th><th class="r">Rendas</th><th class="r">Contas fixas</th><th class="r">Parcelas cartão</th><th class="r">Dia a dia</th><th class="r">Saldo</th><th class="r">Acumulado</th><th>Previsão</th></tr></thead><tbody>
+    ${ps.map(p=>{acc=r2(acc+p.saldo);return `<tr><td><b>${Nome(p.f)}</b></td><td class="r num" title="${esc(p.R.itens.map(i=>`${i.nome}: ${brl(i.valor)}${i.est?" (estimado)":""}`).join("\n"))}">${brl0(p.R.total)}${p.R.itens.some(i=>i.est)?' <span class="small muted">*</span>':""}</td><td class="r num">${brl0(p.fix)}</td><td class="r num">${brl0(p.par)}</td>
+      <td class="r"><input class="v" inputmode="decimal" data-meta="${p.f}" value="${p.meta!=null&&p.meta!==""?nf.format(p.meta):""}" placeholder="${nf.format(p.med.valor)}" title="Deixe em branco para usar a média (${brl(p.med.valor)})"></td>
+      <td class="r num" style="color:${corSaldo(p.saldo)}"><b>${brl0(p.saldo)}</b></td><td class="r num" style="color:${acc<0?"var(--red)":"inherit"}">${brl0(acc)}</td>
+      <td><span class="pill ${p.aval==="Otimista"?"warn":p.aval==="Conservadora"?"ok":""}" title="${esc(p.motivos.join(" · "))}">${p.aval}</span></td></tr>`}).join("")}
+    </tbody></table></div><p class="small muted">* inclui renda estimada (sem holerite). Passe o mouse sobre os valores para ver os detalhes.</p></section>
+    <section class="panel"><h2 style="margin-bottom:8px">Entradas e saídas previstas</h2><div style="position:relative;height:280px"><canvas id="cPlano" aria-label="Gráfico de rendas e gastos previstos"></canvas></div></section>`;
+  $$("[data-meta]").forEach(i=>i.onchange=()=>{const M=MM(i.dataset.meta);M.meta=i.value.trim()===""?null:parseBR(i.value);save();vPlano()});
+  const cor=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  charts.push(new Chart($("#cPlano"),{type:"bar",data:{labels:meses.map(m=>MABR[+m.split("-")[1]-1]),datasets:[{label:"Rendas",data:ps.map(p=>p.R.total),backgroundColor:cor("--blue")},{label:"Gastos",data:ps.map(p=>p.saidas),backgroundColor:cor("--ochre")}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.raw)}`}}},scales:{y:{ticks:{callback:v=>brl0(v)}}}}}));
+}
+
+/* ===== Leitor de holerites (modelo Kroton/Cogna e SEED-PR, com leitura por colunas) ===== */
+const HOL_MESES=["janeiro","fevereiro","marco","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const HOL_DIN=/^(?:R\$\s*)?-?\d{1,3}(?:\.\d{3})*,\d{2}$/;
+const holNorm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const holVal=s=>{s=String(s).replace(/R\$|\s/g,"");const neg=s.startsWith("-");s=s.replace("-","").replace(/\./g,"").replace(",",".");const v=parseFloat(s);return isFinite(v)?(neg?-v:v):NaN};
+function holLinhas(items){
+  const ord=[...items].sort((a,b)=>a.y-b.y||a.x-b.x),ls=[];
+  ord.forEach(it=>{const l=ls.find(L=>Math.abs(L.y-it.y)<3);l?l.it.push(it):ls.push({y:it.y,it:[it]})});
+  ls.forEach(L=>{L.it.sort((a,b)=>a.x-b.x);
+    /* junta "R$" solto com o número seguinte */
+    const out=[];L.it.forEach(i=>{const s=i.s.trim();if(!s)return;const ant=out[out.length-1];if(ant&&ant.s==="R$"&&/^-?[\d.]+,\d{2}$/.test(s)){ant.s="R$ "+s;ant.w=i.x+i.w-ant.x}else out.push({...i,s})});L.it=out;
+    L.txt=L.it.map(i=>i.s).join(" ")});
+  return ls.sort((a,b)=>a.y-b.y);
+}
+function holInterpretar(paginas){
+  let items=[];paginas.forEach((p,k)=>p.items.forEach(i=>items.push({...i,y:i.y+k*5000})));
+  const ls=holLinhas(items),txt=ls.map(l=>l.txt).join("\n"),N=holNorm(txt);
+  const cx=i=>i.x+(i.w||0)/2;
+  /* cabeçalho das colunas */
+  let hdr=null;
+  for(const L of ls){const p=L.it.find(i=>/^(provento|proventos|vantagens|vencimentos)$/i.test(i.s.trim())),d=L.it.find(i=>/^(desconto|descontos)$/i.test(i.s.trim()));if(p&&d){hdr={y:L.y,xp:cx(p),xd:cx(d)};break}}
+  const rubricas=[];
+  if(hdr){
+    for(const L of ls){
+      if(L.y<=hdr.y+1)continue;
+      const T=holNorm(L.txt);
+      if(/^total|base para fgts|^base previd|total r\$|informacoes do imposto|^vantagens:/.test(T))break;
+      const din=L.it.filter(i=>HOL_DIN.test(i.s));if(!din.length)continue;
+      let desc=L.it.filter(i=>!HOL_DIN.test(i.s)).map(i=>i.s).join(" ").trim();
+      desc=desc.replace(/^\d{3,5}\s+/,"");
+      for(let k=0;k<3;k++)desc=desc.replace(/\s+[\d.,]+\s*(dias|horas|%|h|meses|un)?\s*$/i,"");
+      desc=desc.replace(/\s+/g," ").trim();if(!desc)continue;
+      din.forEach(i=>{const v=holVal(i.s);if(!isFinite(v)||v===0)return;const lado=Math.abs(cx(i)-hdr.xp)<=Math.abs(cx(i)-hdr.xd)?"p":"d";rubricas.push({desc,valor:Math.round(v*100)/100,lado})});
+    }
+  }
+  /* totais: valor ao lado do rótulo ou logo abaixo dele */
+  const acha=re=>{
+    for(const L of ls)for(const it of L.it){
+      if(hdr&&Math.abs(L.y-hdr.y)<3)continue;
+      if(!re.test(holNorm(it.s)))continue;
+      const lado=L.it.filter(i=>i.x>it.x&&HOL_DIN.test(i.s)).sort((a,b)=>a.x-b.x)[0];if(lado)return holVal(lado.s);
+      const abaixo=items.filter(i=>HOL_DIN.test(i.s.trim())&&i.y>it.y+2&&i.y<it.y+40&&Math.abs(i.x-it.x)<90).sort((a,b)=>a.y-b.y)[0];if(abaixo)return holVal(abaixo.s);
+    }return null};
+  let totP=acha(/^total de proventos|^total de vencimentos|^vantagens:$/),totD=acha(/^total de descontos|^descontos:$/),liq=acha(/^liquido a receber|^liquido creditado|^liquido:?$|^valor liquido/);
+  const linTot=ls.find(L=>/^total r\$/.test(holNorm(L.txt)));
+  if(linTot&&hdr){const din=linTot.it.filter(i=>HOL_DIN.test(i.s));din.forEach(i=>{const v=holVal(i.s);if(Math.abs(cx(i)-hdr.xp)<=Math.abs(cx(i)-hdr.xd)){if(totP==null)totP=v}else if(totD==null)totD=v})}
+  const somaP=Math.round(rubricas.filter(r=>r.lado==="p").reduce((a,r)=>a+r.valor,0)*100)/100,somaD=Math.round(rubricas.filter(r=>r.lado==="d").reduce((a,r)=>a+r.valor,0)*100)/100;
+  if(totP==null)totP=somaP;if(totD==null)totD=somaD;if(liq==null)liq=Math.round((totP-totD)*100)/100;
+  /* mês de referência */
+  let mes=null;const mm=N.match(/(janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:de\s*|\/\s*|-\s*)?(20\d{2})/);
+  if(mm)mes=`${mm[2]}-${String(HOL_MESES.indexOf(mm[1])+1).padStart(2,"0")}`;
+  else{const m2=N.match(/(?:compet[a-z]*|refer[a-z]*|mes\/ano|periodo)[^0-9]{0,15}(0[1-9]|1[0-2])\s*\/\s*(20\d{2})/);if(m2)mes=`${m2[2]}-${m2[1]}`}
+  /* tipo do pagamento */
+  const provs=rubricas.filter(r=>r.lado==="p").map(r=>holNorm(r.desc)).join(" | ");
+  let tipo="salario";if(/13|decimo|natalina/.test(provs)&&!/salario mensal|salario-base|hora aula/.test(provs))tipo="13";else if(/ferias/.test(provs)&&!/salario mensal|salario-base|hora aula/.test(provs))tipo="ferias";
+  const fonte=/seed|secretaria de estado da educa|folha cres|governo do estado do parana/.test(N)?"SEED":"";
+  const cnpj=(txt.match(/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/)||[])[0]||"";
+  const confere={proventos:Math.abs(somaP-totP)<0.05,descontos:Math.abs(somaD-totD)<0.05,liquido:Math.abs(totP-totD-liq)<0.05};
+  return {rubricas,bruto:totP,descontos:totD,liquido:liq,somaP,somaD,mes,tipo,fonte,cnpj,confere,ok:!!hdr&&rubricas.length>0,linhas:ls.map(l=>l.txt)};
+}
+
 
 const PDFJS_SRC="lib/pdf.min.js", PDFJS_WORKER="lib/pdf.worker.min.js";
 /* ===== Leitor de faturas de cartão (Santander, BB, Caixa, Porto e genérico) ===== */
@@ -643,10 +888,11 @@ const FAT_ABREV={SANT:"SANT",BB:"BB",CAIXA:"CAIXA",PORTO:"PORTO"};
 
 function fatCfg(){
   const c=(S.faturaCfg||={});
-  c.tipos||=[...FAT_TIPOS_PADRAO];c.reemb||=[...FAT_REEMB_PADRAO];c.regras||={};c.mapa||={...FAT_MAPA_PADRAO};c.cartoes||={};c.aplicado||={};
+  c.tipos||=[...FAT_TIPOS_PADRAO];c.cat||={...FAT_CAT_PADRAO};c.reemb||=[...FAT_REEMB_PADRAO];c.regras||={};c.mapa||={...FAT_MAPA_PADRAO};c.cartoes||={};c.aplicado||={};
   return c;
 }
-const fatChave=d=>FAT_NORM(d).split(" ").filter(w=>!/^\d+$/.test(w)).slice(0,3).join(" ");
+const FAT_CIDADES=/\s+(LONDRINA|SAO PAULO|SAO JOSE DO|SAO JOSE|CURITIBA|CAMBE|OSASCO|BRASILIA|RIO DE JANEIR|RIO DE JANEIRO|BARUERI|PENHA|FLORIANO|FLORIANOPOLIS|PORTO ALEGR|PORTO ALEGRE|MARINGA|ROLANDIA|IBIPORA|ARAPONGAS|BR|BRA)$/;
+const fatChave=d=>{let n=FAT_NORM(d);for(let k=0;k<3;k++)n=n.replace(FAT_CIDADES,"");return n.split(" ").filter(w=>!/^\d+$/.test(w)).slice(0,3).join(" ")};
 function fatTipoSugerido(desc){
   const c=fatCfg(),N=FAT_NORM(desc);let melhor="",tam=0;
   const testa=(k,t)=>{const K=FAT_NORM(k);if(K.length>=3&&(N.startsWith(K)||N.includes(" "+K)||N.includes(K+" ")||N===K)&&K.length>tam){melhor=t;tam=K.length}};
@@ -699,9 +945,9 @@ const fatMascarar=t=>t.replace(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g,"XXX.XXX.XXX-
 let FAT_REV=null,FAT_FILTRO="";
 const fatMes=()=>mk();
 async function vFaturas(){
-  const m=fatMes();$("#view").innerHTML=`<p class="muted">Carregando faturas…</p>`;
-  const F=await fatCarregar(m);if(m!==fatMes()||VIEW!=="faturas")return;
-  if(F.erro==="permission-denied"){$("#view").innerHTML=`<div class="alert bad"><b>As regras do Firebase ainda não permitem guardar faturas.</b> Atualize as regras do Firestore do projeto do orçamento (o texto está no README) e recarregue a página.</div>`;return}
+  const m=fatMes();$("#gsub").innerHTML=`<p class="muted">Carregando faturas…</p>`;
+  const F=await fatCarregar(m);if(m!==fatMes()||VIEW!=="gastos")return;
+  if(F.erro==="permission-denied"){$("#gsub").innerHTML=`<div class="alert bad"><b>As regras do Firebase ainda não permitem guardar faturas.</b> Atualize as regras do Firestore do projeto do orçamento (o texto está no README) e recarregue a página.</div>`;return}
   const c=fatCfg(),its=F.itens,meses=MESES[MES-1];
   const tot=its.reduce((a,i)=>a+i.valor,0),reemb=its.filter(i=>fatEhReemb(i.tipo)).reduce((a,i)=>a+i.valor,0),semTipo=its.filter(i=>!i.tipo).length;
   const cartoes=[...new Set(its.map(i=>i.cartao))].sort();
@@ -710,12 +956,7 @@ async function vFaturas(){
   const grupos={};lista.forEach((it,idx)=>{(grupos[it.tipo||""]||=[]).push(it)});
   const ordemTipos=Object.keys(grupos).sort((a,b)=>(a===""?-1:b===""?1:a.localeCompare(b,"pt-BR")));
   let html=`
-  <div class="sum">
-    <div><div class="k">Total das faturas de ${meses}</div><div class="v">${brl0(tot)}</div><div class="o">${its.length} lançamentos · ${cartoes.length} cartão(ões)</div></div>
-    <div><div class="k">Gastos de terceiros (a receber)</div><div class="v">${brl0(reemb)}</div><div class="o">${esc(c.reemb.join(", "))}</div></div>
-    <div><div class="k">Gastos da família</div><div class="v">${brl0(tot-reemb)}</div><div class="o">vão para o orçamento</div></div>
-    <div><div class="k">Sem classificação</div><div class="v ${semTipo?"neg":""}">${semTipo}</div><div class="o">${semTipo?"classifique abaixo":"tudo classificado"}</div></div>
-  </div>
+  <p class="small" style="margin:0 0 10px">Faturas de ${meses}: <b>${brl(tot)}</b> em ${its.length} lançamentos · da família <b>${brl(tot-reemb)}</b> · de terceiros (a receber) <b>${brl(reemb)}</b>${semTipo?` · <span class="neg"><b>${semTipo} sem tipo</b></span>`:""}</p>
   <section class="sheet"><div class="sheet-h"><h2>Importar faturas de ${meses}</h2><span class="small muted">Use o mês em que a fatura vence.</span></div>
     <div style="padding:14px 16px">
       <div class="row"><button class="btn primary" id="fImp">Escolher PDFs das faturas</button><input type="file" id="fImpF" accept="application/pdf,.pdf" multiple hidden>
@@ -726,12 +967,12 @@ async function vFaturas(){
   if(its.length){
     html+=`<section class="sheet"><div class="sheet-h"><h2>Lançamentos de ${meses}</h2>
       <div class="row" style="align-items:center"><select id="fFiltro" style="width:auto"><option value="">Todos os cartões</option>${porCartao.map(([k,v])=>`<option value="${esc(k)}" ${FAT_FILTRO===k?"selected":""}>${esc(k)} (${brl0(v)})</option>`).join("")}</select>
-      <button class="btn" id="fXls">Planilha Excel</button><button class="btn primary" id="fOrc">Enviar para o orçamento</button></div></div>
+      <button class="btn" id="fXls">Planilha Excel</button></div></div>
       <datalist id="fTipos">${c.tipos.map(t=>`<option value="${esc(t)}">`).join("")}</datalist>
       ${ordemTipos.map(t=>{const g=grupos[t],st=g.reduce((a,i)=>a+i.valor,0);return `<details class="grp" open><summary><span>${t?esc(t):'<span class="neg">Sem classificação</span>'}${fatEhReemb(t)?' <span class="small muted">· terceiros</span>':""}</span><span class="muted small">${g.length} lanç.</span><span class="num">${brl(st)}</span></summary>
         <div class="tw"><table class="fat"><colgroup><col style="width:66px"><col><col style="width:62px"><col style="width:170px"><col style="width:112px"><col style="width:190px"><col style="width:118px"><col style="width:54px"></colgroup><thead><tr><th>Data</th><th>Local</th><th class="r">Parcela</th><th>Tipo</th><th class="r">Valor</th><th>Observações</th><th>Cartão</th><th></th></tr></thead><tbody>
         ${g.map(it=>`<tr><td class="small">${esc(it.data)}</td><td>${esc(it.descricao)}</td><td class="r small">${it.parcela?`${it.parcela.n}/${it.parcela.t}`:""}</td>
-          <td><input class="name" list="fTipos" data-ft="${it.id}" value="${esc(it.tipo||"")}" style="min-width:130px" aria-label="Tipo de ${esc(it.descricao)}"></td>
+          <td><select data-ft="${it.id}" style="width:100%" aria-label="Tipo de ${esc(it.descricao)}"><option value="">— escolha —</option>${c.tipos.map(t=>`<option ${it.tipo===t?"selected":""}>${esc(t)}</option>`).join("")}<option value="__novo">+ Novo tipo…</option></select></td>
           <td class="r num">${brl(it.valor)}</td><td><input class="name" data-fo="${it.id}" value="${esc(it.obs||"")}" placeholder="—" aria-label="Observação"></td>
           <td class="small">${esc(it.cartao)}</td><td><button class="btn sm" data-fd="${it.id}" aria-label="Excluir lançamento">×</button></td></tr>`).join("")}
         </tbody></table></div></details>`}).join("")}
@@ -745,7 +986,7 @@ async function vFaturas(){
       </tbody></table></div></section>`;
   }
   html+=`<section class="sheet"><details class="grp"><summary><span>Configurações das faturas</span><span></span><span class="small muted">tipos, terceiros e cartões</span></summary><div style="padding:14px 16px" id="fCfg"></div></details></section>`;
-  $("#view").innerHTML=html;
+  $("#gsub").innerHTML=html;
   ligarFaturas(m);
 }
 function ligarFaturas(m){
@@ -754,13 +995,16 @@ function ligarFaturas(m){
   $("#fImpF").onchange=async e=>{const fs=[...e.target.files];e.target.value="";if(fs.length)await fatImportar(m,fs,$("#fBanco").value)};
   $("#fFiltro")?.addEventListener("change",e=>{FAT_FILTRO=e.target.value;vFaturas()});
   $$("[data-ft]").forEach(inp=>inp.onchange=()=>{
-    const it=byId(inp.dataset.ft),t=inp.value.trim().toUpperCase();if(!it)return;
-    it.tipo=t;if(t&&!c.tipos.includes(t))c.tipos.push(t);
-    const k=fatChave(it.descricao);if(k&&t){c.regras[k]=t;F.itens.forEach(o=>{if(!o.tipo&&fatChave(o.descricao)===k)o.tipo=t})}
-    save();fatSalvar(m);const y=scrollY;vFaturas().then(()=>scrollTo(0,y));
+    const it=byId(inp.dataset.ft);if(!it)return;let t=inp.value;
+    if(t==="__novo"){t=(prompt("Nome do novo tipo (ex.: PET):")||"").trim().toUpperCase();if(!t){vFaturas();return}if(!c.tipos.includes(t))c.tipos.push(t);(c.cat||={})[t]=(c.cat[t]||"Outros");toast(`Tipo "${t}" criado na categoria Outros. Ajuste em Configurações das faturas, se quiser.`)}
+    it.tipo=t;const k=fatChave(it.descricao);
+    const iguais=F.itens.filter(o=>o!==it&&fatChave(o.descricao)===k&&o.tipo!==t);
+    if(t&&iguais.length&&confirm(`Mudar também as outras ${iguais.length} compra(s) de "${it.descricao}" deste mês para ${t}?\n\nAs próximas faturas já virão com esse tipo.`))iguais.forEach(o=>o.tipo=t);
+    if(k&&t)c.regras[k]=t;
+    save();fatSalvar(m);const y=scrollY;vGastos().then(()=>scrollTo(0,y));
   });
   $$("[data-fo]").forEach(inp=>inp.onchange=()=>{const it=byId(inp.dataset.fo);if(it){it.obs=inp.value.trim();fatSalvar(m)}});
-  $$("[data-fd]").forEach(b=>b.onclick=()=>{const it=byId(b.dataset.fd);if(it&&confirm(`Excluir "${it.descricao}" (${brl(it.valor)})?`)){F.itens=F.itens.filter(i=>i!==it);fatSalvar(m);const y=scrollY;vFaturas().then(()=>scrollTo(0,y))}});
+  $$("[data-fd]").forEach(b=>b.onclick=()=>{const it=byId(b.dataset.fd);if(it&&confirm(`Excluir "${it.descricao}" (${brl(it.valor)})?`)){F.itens=F.itens.filter(i=>i!==it);fatSalvar(m);const y=scrollY;vGastos().then(()=>scrollTo(0,y))}});
   $("#fXls")?.addEventListener("click",()=>fatExcel(m));
   $("#fOrc")?.addEventListener("click",()=>fatParaOrcamento(m));
   fatConfigHTML();
@@ -793,7 +1037,7 @@ function fatRevisao(){
     <pre id="fDiag" class="small" style="display:none;white-space:pre-wrap;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:10px;max-height:320px;overflow:auto;margin-top:10px"></pre></div>`;
   $$("[data-diag]").forEach(b=>b.onclick=()=>{const r=relat.find(x=>x.nome===b.dataset.diag),el=$("#fDiag");el.style.display="block";el.textContent=fatMascarar((r.diag||[]).join("\n"))+"\n\n(Se algum lançamento não foi lido, copie este texto e envie para ajuste. Nome completo e números de cartão/CPF já aparecem mascarados.)"});
   $("#fCanc")?.addEventListener("click",()=>{FAT_REV=null;box.innerHTML=""});
-  $("#fConf")?.addEventListener("click",()=>{const F=FAT[FAT_REV.m];F.itens=F.itens.concat(FAT_REV.novos);fatSalvar(FAT_REV.m);FAT_REV=null;toast("Lançamentos adicionados");vFaturas()});
+  $("#fConf")?.addEventListener("click",()=>{const F=FAT[FAT_REV.m];F.itens=F.itens.concat(FAT_REV.novos);fatSalvar(FAT_REV.m);FAT_REV=null;toast("Lançamentos adicionados");vGastos()});
 }
 /* ---------- envio ao orçamento (Real do mês), sem duplicar ---------- */
 function fatParaOrcamento(m){
@@ -841,10 +1085,12 @@ function fatConfigHTML(){
   box.innerHTML=`<div class="grid2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
     <label class="f">Tipos (um por linha)<textarea id="cTipos" rows="10" style="width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--sunk)">${esc(c.tipos.join("\n"))}</textarea></label>
     <div><div class="f" style="margin-bottom:6px">Tipos de terceiros (reembolsáveis)</div><div style="max-height:230px;overflow:auto">${c.tipos.map(t=>`<label class="small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-reemb="${esc(t)}" ${c.reemb.includes(t)?"checked":""}>${esc(t)}</label>`).join("")}</div></div>
+    <div><div class="f" style="margin-bottom:6px">Categoria de cada tipo (para o diagnóstico)</div><div style="max-height:230px;overflow:auto">${c.tipos.filter(t=>!c.reemb.includes(t)).map(t=>`<label class="small" style="display:flex;justify-content:space-between;gap:6px;align-items:center;margin-bottom:3px">${esc(t)}<select data-tcat="${esc(t)}" style="width:auto;padding:3px 6px">${CATS.map(k=>`<option ${fatCat(t)===k?"selected":""}>${k}</option>`).join("")}</select></label>`).join("")}</div></div>
     <div><div class="f" style="margin-bottom:6px">Nome dos cartões</div>${cards.length?"":'<p class="small muted">Aparecem aqui depois da primeira importação. O padrão é banco + primeiro nome do titular.</p>'}${cards.map(k=>`<label class="f">${esc(k)}<input type="text" data-cart="${esc(k)}" value="${esc(c.cartoes[k])}"></label>`).join("")}</div>
   </div><p class="small muted">Regras aprendidas: ${Object.keys(c.regras).length}. Quando você muda o tipo de um lançamento, o sistema passa a classificar sozinho as compras daquele estabelecimento.</p>`;
   $("#cTipos").onchange=e=>{c.tipos=[...new Set(e.target.value.split("\n").map(s=>s.trim().toUpperCase()).filter(Boolean))];save();fatConfigHTML()};
   $$("[data-reemb]").forEach(cb=>cb.onchange=()=>{const t=cb.dataset.reemb;c.reemb=cb.checked?[...new Set([...c.reemb,t])]:c.reemb.filter(x=>x!==t);save()});
+  $$("[data-tcat]").forEach(s=>s.onchange=()=>{(c.cat||={})[s.dataset.tcat]=s.value;save()});
   $$("[data-cart]").forEach(i=>i.onchange=()=>{c.cartoes[i.dataset.cart]=i.value.trim()||c.cartoes[i.dataset.cart];save()});
 }
 
@@ -877,7 +1123,7 @@ function vBackup(){
   </section>`;
   $("#x-xlsx").onclick=exportXlsx;$("#x-pdfm").onclick=()=>exportPdf("mes");$("#x-pdfa").onclick=()=>exportPdf("ano");
   $("#x-rest").onclick=()=>$("#x-file").click();
-  $("#x-file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const d=await lerBackupXlsx(f);if(!d)return;if(!confirm("Substituir todos os dados da nuvem pelos do arquivo?"))return;S=d;save();render();toast("Dados restaurados.")};
+  $("#x-file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const d=await lerBackupXlsx(f);if(!d)return;if(!confirm("Substituir todos os dados da nuvem pelos do arquivo?"))return;S=d;migrarV4();save();restaurarFaturasBackup().then(()=>{render();toast("Dados restaurados.")})};
   $("#x-lock").onchange=e=>{(S.settings||={}).lockMin=+e.target.value;save();toast("Salvo")};
   $("#x-pw").onsubmit=async e=>{
     e.preventDefault();const p0=$("#x-p0").value,p1=$("#x-p1").value;
@@ -893,75 +1139,56 @@ function vBackup(){
   };
 }
 
-/* ---------- Excel ---------- */
-function exportXlsx(){
-  const head=["Item"];MABR.forEach(n=>head.push(`${n} Prev.`,`${n} Real`));head.push("Total Prev.","Total Real");
-  const ms=Array.from({length:12},(_,i)=>mk(ANO,i+1));
-  const linha=(nome,fn)=>{const r=[nome];let tp=0,tr=0;ms.forEach(m=>{const p=r2(fn(m,"p")),re=r2(fn(m,"r"));tp+=p;tr+=re;r.push(p||null,re||null)});r.push(r2(tp),r2(tr));return r};
-  const A=[[`Orçamento da Família ${ANO}`],[],head,["RECEITAS"]];
-  S.fontes.forEach(f=>TIPOS_RENDA.forEach(([t,n])=>{const k=`${f.id}|${t}`;if(ms.some(m=>V(m,k,"p")||V(m,k,"r"))||t==="sal")A.push(linha(`${f.nome}${t==="sal"?"":" - "+n}`,(m,mo)=>V(m,k,mo)))}));
-  A.push(linha("RENDA BRUTA",(m,mo)=>totais(m,mo).bruta));
-  const desc=grupo("descontos");A.push([desc.nome.toUpperCase()]);desc.itens.forEach(i=>A.push(linha(i.nome,(m,mo)=>V(m,i.id,mo))));
-  A.push(linha("RENDA LÍQUIDA",(m,mo)=>totais(m,mo).liq),[]);
-  S.grupos.filter(g=>g.tipo!=="desconto").forEach(g=>{A.push([g.nome.toUpperCase()]);g.itens.forEach(i=>A.push(linha(i.nome,(m,mo)=>V(m,i.id,mo))));A.push(linha("Total "+g.nome,(m,mo)=>totais(m,mo).porGrupo[g.id]),[])});
-  A.push(linha("TOTAL DE DESPESAS",(m,mo)=>totais(m,mo).desp),linha("GUARDADO NA RESERVA",(m,mo)=>totais(m,mo).aplic),linha("RESULTADO DO MÊS",(m,mo)=>totais(m,mo).res),linha("Tirado da reserva (não é renda)",(m,mo)=>V(m,"resgate",mo)));
-  const ws=XLSX.utils.aoa_to_sheet(A);ws["!cols"]=[{wch:38},...Array(26).fill({wch:11})];ws["!freeze"]={xSplit:1,ySplit:3};
-  for(const ref in ws){if(ref[0]==="!")continue;const c=ws[ref];if(typeof c.v==="number")c.z="#,##0.00"}
-  const L=linhasAno();
-  const R=[["Mês","Base","Renda bruta","Descontos","Renda líquida","Despesas","Reserva","Resultado","Acumulado"],...L.map(x=>[MESES[x.i],x.modo==="r"?"real":"previsto",x.T.bruta,x.T.desc,x.T.liq,x.T.desp,x.T.aplic,x.T.res,x.acc])];
-  const ws2=XLSX.utils.aoa_to_sheet(R);ws2["!cols"]=[{wch:12},{wch:9},...Array(7).fill({wch:13})];
-  for(const ref in ws2){if(ref[0]!=="!"&&typeof ws2[ref].v==="number")ws2[ref].z="#,##0.00"}
-  const json=JSON.stringify({...S,user:undefined}),chunks=[["Backup do sistema. Não edite esta aba."]];for(let i=0;i<json.length;i+=30000)chunks.push([json.slice(i,i+30000)]);
-  const ws3=XLSX.utils.aoa_to_sheet(chunks);
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,`Orçamento ${ANO}`);XLSX.utils.book_append_sheet(wb,ws2,"Resumo");XLSX.utils.book_append_sheet(wb,ws3,"backup");
-  wb.Workbook={Sheets:[{},{},{Hidden:1}]};
-  const out=XLSX.write(wb,{bookType:"xlsx",type:"array"});
-  download(`orcamento-familia-${ANO}-${new Date().toISOString().slice(0,10)}.xlsx`,new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
-  (S.settings||={}).ultimoBackup=new Date().toISOString();save();mostrarLembrete();
-  toast("Planilha baixada. Guarde no Google Drive ou numa pasta só sua.");
+/* ---------- backup em Excel (com faturas) e PDF ---------- */
+let BACKUP_FAT=null;
+async function fatSalvarAgora(m){const {iv,ct}=await enc(KEY,{itens:FAT[m].itens});await fatRef(m).set({iv,ct,atualizado:firebase.firestore.FieldValue.serverTimestamp()})}
+async function restaurarFaturasBackup(){if(!BACKUP_FAT)return;for(const [m,itens] of Object.entries(BACKUP_FAT)){FAT[m]={itens};try{await fatSalvarAgora(m)}catch{}}BACKUP_FAT=null}
+async function exportXlsx(){
+  const meses=Array.from({length:12},(_,i)=>mk(ANO,i+1));await Promise.all(meses.map(fatCarregar));
+  const res=[["Mês","Rendas líquidas","Contas fixas","Cartões (família)","Outros gastos","Planilha antiga","Total de gastos","Saldo"]];
+  meses.forEach(m=>{const R=rendasMes(m),G=gastosMes(m);if(!R.liquido&&!G.total)return;res.push([Nome(m),R.liquido,G.fixas,G.cartao,G.outros,G.planilha,G.total,r2(R.liquido-G.total)])});
+  const ren=[["Mês","Origem","Descrição","Bruto","Descontos","Líquido","Situação"]];
+  meses.forEach(m=>{const M=S.mes[m];if(!M)return;(M.rendas||[]).forEach(r=>ren.push([Nome(m),r.origem,`${fonteNome(r.fonte)}${r.tipo!=="salario"?" "+r.tipo:""}`,r.bruto,r2((r.descontos||[]).reduce((a,d)=>a+d.valor,0)),r.liquido,r.status]));if(M.renata)ren.push([Nome(m),"manual","Renda Renata","","",M.renata,"confirmado"]);(M.outras||[]).forEach(o=>ren.push([Nome(m),"manual",o.desc,"","",o.valor,"confirmado"]))});
+  const car=[["Mês","Data","Local","Parcela","Tipo","Categoria","Valor","Observações","Cartão"]];
+  meses.forEach(m=>(FAT[m]?.itens||[]).forEach(i=>car.push([Nome(m),i.data,i.descricao,i.parcela?`${i.parcela.n}/${i.parcela.t}`:"",i.tipo||"",fatEhReemb(i.tipo)?"Terceiros":fatCat(i.tipo),i.valor,i.obs||"",i.cartao])));
+  const fix=[["Conta","Categoria","Valor padrão"],...S.fixas.map(f=>[f.nome,f.cat,f.valor])];
+  const out=[["Mês","Descrição","Categoria","Valor"]];meses.forEach(m=>(S.mes[m]?.gastos||[]).filter(g=>g.origem!=="planilha").forEach(g=>out.push([Nome(m),g.desc,g.cat,g.valor])));
+  const fat={};Object.entries(FAT).forEach(([m,F])=>{if(F&&F.itens&&F.itens.length)fat[m]=F.itens});
+  const json=JSON.stringify({versao:4,S:{...S,user:undefined},FAT:fat}),chunks=[["Backup do sistema. Não edite esta aba."]];for(let i=0;i<json.length;i+=30000)chunks.push([json.slice(i,i+30000)]);
+  const wb=XLSX.utils.book_new(),fmt=ws=>{for(const r in ws)if(r[0]!=="!"&&typeof ws[r].v==="number")ws[r].z="#,##0.00";return ws};
+  [["Resumo "+ANO,res,[14,15,13,15,13,14,14,12]],["Rendas",ren,[14,10,26,12,12,12,12]],["Cartões",car,[12,7,34,8,16,18,11,26,14]],["Contas fixas",fix,[30,20,12]],["Outros gastos",out,[12,34,20,11]]].forEach(([n,a,w])=>{const ws=fmt(XLSX.utils.aoa_to_sheet(a));ws["!cols"]=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,n)});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(chunks),"backup");wb.Workbook={Sheets:[{},{},{},{},{},{Hidden:1}]};
+  download(`orcamento-familia-${ANO}-${new Date().toISOString().slice(0,10)}.xlsx`,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+  (S.settings||={}).ultimoBackup=new Date().toISOString();save();mostrarLembrete();toast("Planilha baixada. Guarde no Google Drive ou numa pasta só sua.");
 }
 async function lerBackupXlsx(file){
-  try{
-    const wb=XLSX.read(await file.arrayBuffer(),{type:"array"}),ws=wb.Sheets.backup;
-    if(!ws)throw 0;
-    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});const d=JSON.parse(rows.slice(1).map(r=>r[0]).join(""));
-    if(!d.fontes||!d.grupos||!d.v)throw 0;return d;
+  try{const wb=XLSX.read(await file.arrayBuffer(),{type:"array"}),ws=wb.Sheets.backup;if(!ws)throw 0;
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""}),d=JSON.parse(rows.slice(1).map(r=>r[0]).join(""));
+    if(d.versao===4&&d.S){BACKUP_FAT=d.FAT||{};return d.S}
+    if(d.fontes&&d.grupos&&d.v){BACKUP_FAT=null;return d}throw 0;
   }catch{alert("Este arquivo não é um backup deste sistema. Use um Excel baixado em Backup e conta.");return null}
 }
-
-/* ---------- PDF ---------- */
 async function exportPdf(tipo){
-  if(!window.jspdf){alert("A biblioteca de PDF não carregou. Verifique a internet e recarregue.");return}
-  const {jsPDF}=window.jspdf,doc=new jsPDF({unit:"pt",format:"a4",orientation:tipo==="ano"?"landscape":"portrait"});
-  const W=doc.internal.pageSize.getWidth(),M=36,hs={fillColor:[44,90,134],textColor:255},t=s=>String(s).replace(/[\u00a0\u202f]/g," ");
-  const titulo=s=>{doc.setFont("helvetica","bold");doc.setFontSize(16);doc.setTextColor(29,39,48);doc.text(t(s),M,46);doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(92,104,112);doc.text(t(`Gerado em ${new Date().toLocaleString("pt-BR")}`),M,60);doc.setTextColor(29,39,48)};
+  if(!window.jspdf){alert("A biblioteca de PDF não carregou.");return}
+  const {jsPDF}=window.jspdf,doc=new jsPDF({unit:"pt",format:"a4"}),M=36,t=s=>String(s).replace(/[\u00a0\u202f]/g," "),hs={fillColor:[44,90,134],textColor:255};
+  doc.setFont("helvetica","bold");doc.setFontSize(15);
   if(tipo==="mes"){
-    const m=mk(),Tp=totais(m,"p"),Tr=totais(m,"r");
-    titulo(`Orçamento de ${MESES[MES-1]} de ${ANO}`);
-    const body=[];const sec=n=>body.push([{content:n,colSpan:3,styles:{fontStyle:"bold",fillColor:[238,241,236]}}]);
-    const ln=(n,p,r,b)=>body.push([n,p?nf.format(p):"",r?nf.format(r):""].map(x=>b?{content:t(x),styles:{fontStyle:"bold"}}:t(x)));
-    sec("Receitas");S.fontes.forEach(f=>TIPOS_RENDA.forEach(([tt,n])=>{const k=`${f.id}|${tt}`,p=V(m,k,"p"),r=V(m,k,"r");if(p||r)ln(`${f.nome}${tt==="sal"?"":" - "+n}`,p,r)}));
-    ln("Renda bruta",Tp.bruta,Tr.bruta,1);
-    S.grupos.forEach(g=>{const its=g.itens.filter(i=>V(m,i.id,"p")||V(m,i.id,"r"));if(!its.length)return;sec(g.nome);its.forEach(i=>ln(i.nome,V(m,i.id,"p"),V(m,i.id,"r")));ln("Total "+g.nome,Tp.porGrupo[g.id],Tr.porGrupo[g.id],1);if(g.tipo==="desconto")ln("Renda líquida",Tp.liq,Tr.liq,1)});
-    sec("Resultado");ln("Total de despesas",Tp.desp,Tr.desp,1);ln("Guardado na reserva",Tp.aplic,Tr.aplic);ln("Resultado do mês",Tp.res,Tr.res,1);if(Tp.resg||Tr.resg)ln("Tirado da reserva (não é renda)",Tp.resg,Tr.resg);
-    doc.autoTable({startY:72,head:[["Item","Previsto","Real"]],body,styles:{fontSize:8.5,cellPadding:3},columnStyles:{1:{halign:"right"},2:{halign:"right"}},headStyles:hs,margin:{left:M,right:M}});
+    const m=mk();await fatCarregar(m);const R=rendasMes(m),G=gastosMes(m);
+    doc.text(t(`Orçamento de ${nomeMes(m)} de ${ANO}`),M,46);doc.setFont("helvetica","normal");doc.setFontSize(10);
+    doc.text(t(`Renda líquida ${brl(R.liquido)} · Gastos ${brl(G.total)} · Saldo ${brl(R.liquido-G.total)}`),M,64);
+    doc.autoTable({startY:78,head:[["Rendas","Valor"]],body:R.itens.map(i=>[t(i.nome+(i.status==="previsto"?" (previsto)":"")),t(brl(i.valor))]),headStyles:hs,styles:{fontSize:9},columnStyles:{1:{halign:"right"}},margin:{left:M,right:M}});
+    doc.autoTable({head:[["Gastos por categoria","Valor"]],body:Object.entries(G.porCat).sort((a,b)=>b[1]-a[1]).map(([c,v])=>[t(c),t(brl(v))]),headStyles:hs,styles:{fontSize:9},columnStyles:{1:{halign:"right"}},margin:{left:M,right:M}});
+    const its=FAT[m]?.itens||[];if(its.length)doc.autoTable({head:[["Data","Local","Parcela","Tipo","Valor","Cartão"]],body:its.map(i=>[i.data,i.descricao,i.parcela?`${i.parcela.n}/${i.parcela.t}`:"",i.tipo||"",brl(i.valor),i.cartao].map(t)),headStyles:hs,styles:{fontSize:7.5},columnStyles:{4:{halign:"right"}},margin:{left:M,right:M}});
+    doc.save(`orcamento-${m}.pdf`);
   }else{
-    titulo(`Orçamento da Família ${ANO}: resumo do ano`);
-    const L=linhasAno();
-    doc.autoTable({startY:72,head:[["Mês","Base","Renda bruta","Descontos","Renda líquida","Despesas","Reserva","Resultado","Acumulado"]],
-      body:L.map(x=>[MESES[x.i],x.modo==="r"?"real":"previsto",...[x.T.bruta,x.T.desc,x.T.liq,x.T.desp,x.T.aplic,x.T.res,x.acc].map(v=>t(nf.format(v)))]),
-      styles:{fontSize:9,halign:"right"},columnStyles:{0:{halign:"left"},1:{halign:"left"}},headStyles:hs,margin:{left:M,right:M}});
-    const cf=configsGraficos(true),box=document.createElement("div");box.style.cssText="position:absolute;left:-9999px;top:0";document.body.appendChild(box);
-    const img=cfg=>{const c=document.createElement("canvas");c.width=900;c.height=380;box.appendChild(c);const ch=new Chart(c,{...cfg,options:{...cfg.options,responsive:false,animation:false,devicePixelRatio:2}});const u=c.toDataURL("image/png");ch.destroy();return u};
-    const i1=img(cf.c1),i2=img(cf.c2);box.remove();
-    doc.addPage();const iw=(W-2*M-16)/2,ih=iw*380/900;doc.setFontSize(12);doc.text("Gráficos",M,46);
-    doc.addImage(i1,"PNG",M,60,iw,ih,undefined,"FAST");doc.addImage(i2,"PNG",M+iw+16,60,iw,ih,undefined,"FAST");
-    const gs=S.grupos.filter(g=>g.tipo!=="desconto");
-    doc.autoTable({startY:80+ih,head:[["Grupo",...MABR,"Total"]],body:gs.map(g=>{let s=0;const r=L.map(x=>{const v=x.T.porGrupo[g.id]||0;s+=v;return v?nf.format(v):""});return [g.nome,...r,nf.format(s)].map(t)}),
-      styles:{fontSize:7,halign:"right"},columnStyles:{0:{halign:"left",cellWidth:110}},headStyles:hs,margin:{left:M,right:M}});
+    const meses=Array.from({length:12},(_,i)=>mk(ANO,i+1));await Promise.all(meses.map(fatCarregar));
+    doc.text(t(`Orçamento da Família ${ANO}`),M,46);
+    doc.autoTable({startY:62,head:[["Mês","Rendas","Gastos","Saldo"]],body:meses.filter(m=>mesTemDados(m)).map(m=>{const R=rendasMes(m),G=gastosMes(m);return [Nome(m),brl(R.liquido),brl(G.total),brl(R.liquido-G.total)].map(t)}),headStyles:hs,styles:{fontSize:9,halign:"right"},columnStyles:{0:{halign:"left"}},margin:{left:M,right:M}});
+    const ps=Array.from({length:12},(_,k)=>previsao(addMes(NOW,k+1)));
+    doc.autoTable({head:[["Previsão","Rendas","Gastos","Saldo","Avaliação"]],body:ps.map(p=>[Nome(p.f),brl(p.R.total),brl(p.saidas),brl(p.saldo),p.aval].map(t)),headStyles:hs,styles:{fontSize:9,halign:"right"},columnStyles:{0:{halign:"left"},4:{halign:"left"}},margin:{left:M,right:M}});
+    doc.save(`orcamento-${ANO}.pdf`);
   }
-  const n=doc.internal.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(120);doc.text(`${i}/${n}`,W-M,doc.internal.pageSize.getHeight()-18,{align:"right"})}
-  doc.save(tipo==="mes"?`orcamento-${mk()}.pdf`:`orcamento-${ANO}-resumo.pdf`);toast("PDF baixado");
+  toast("PDF baixado");
 }
 
 /* ---------- início ---------- */

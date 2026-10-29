@@ -1,53 +1,20 @@
 # Orçamento da Família
 
-Orçamento mensal no formato da planilha (Previsto e Real), com os dados sincronizados no Firebase (plano gratuito) e criptografados no navegador antes de serem enviados.
+Sistema de orçamento familiar com dados no Firebase, criptografados no navegador antes de serem enviados.
 
-## Publicar no GitHub Pages
-1. Envie `index.html`, `README.md` e `.gitignore` para um repositório.
-2. Em *Settings → Pages*, escolha a branch `main` e a pasta raiz.
-3. Acesse `https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/`.
-4. No Firebase, confira se `SEU-USUARIO.github.io` está em Authentication → Configurações → Domínios autorizados.
+## Telas
+- **Início:** resultado do mês, alerta dos próximos 3 meses (com avaliação da previsão: otimista, realista ou conservadora), avisos e diagnóstico de para onde vai o dinheiro.
+- **Rendas:** holerites em PDF (SEED, NEAD, Unopar), lidos e conferidos automaticamente; Renda Renata; outras rendas (bolsa, estágio, bicos); 13º e férias, com ou sem holerite.
+- **Gastos:** Cartões (faturas em PDF), Contas fixas e Outros gastos.
+- **Planejamento:** os próximos 12 meses, calculados sozinhos. A meta de gastos do dia a dia é opcional.
+- **Backup:** Excel (também serve para restaurar), PDF do mês e do ano, troca de senha.
 
-## Primeiro acesso
-Entre com o e-mail e a senha cadastrados no Firebase. Como a conta ainda não tem dados, o sistema pede o **código de primeiro acesso**, que carrega os dados de 2026 e os grava na nuvem, criptografados com a sua senha. Isso acontece uma única vez.
+## Instalação
+Envie para o GitHub o `index.html` e a pasta `lib`. Cole o conteúdo de `firestore.rules` no Firebase (Firestore Database → Regras → Publicar) se ainda não tiver feito.
 
 ## Segurança
-- A configuração do Firebase no código não é secreta: ela só identifica o projeto.
-- Quem protege os dados são as regras do Firestore (cada conta acessa só o próprio cofre) e a criptografia AES-256 feita no navegador. No banco fica apenas texto cifrado.
-- **Se esquecer a senha:** "Esqueci minha senha" cria uma senha nova, mas os dados continuam protegidos pela antiga, que o sistema pede uma vez. Sem a senha antiga, só um backup em Excel recupera os dados.
-
-## Regras do Firestore
-As regras completas estão no arquivo `firestore.rules`. Cole no Firebase (Firestore Database → Regras → Publicar) sempre que ele mudar.
-
-### Versão anterior (antes da aba Faturas)
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /cofres/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-    }
-    match /{document=**} {
-      allow read, write: if false;
-    }
-  }
-}
-```
-
-## Uso
-- **Mês:** escolha o mês, alterne entre Previsto e Real e digite os valores. Cada alteração é salva na nuvem, e o status aparece no topo.
-- **Ano:** resumo mês a mês, acumulado e gráficos.
-- **Backup e conta:** Excel (cópia extra e impressão), PDFs, restauração e troca de senha.
-
-## Aba Faturas
-- Importe os PDFs das faturas (Santander, Banco do Brasil, Caixa e Porto) no mês em que elas vencem.
-- Use o PDF original baixado do app ou do site do banco. Cópias feitas com "Imprimir como PDF" viram imagem e não podem ser lidas.
-- A leitura do PDF acontece no navegador. Só os lançamentos já organizados vão para o Firebase, criptografados.
-- O tipo de cada compra é sugerido automaticamente. Ao corrigir um tipo, o sistema aprende o estabelecimento.
-- "Enviar para o orçamento" leva os totais por tipo para o Real do mês, sem os gastos de terceiros.
-
-## Pasta lib
-As bibliotecas (Firebase, leitor de PDF, Excel, PDF e gráficos) ficam na pasta `lib/` do próprio repositório, em versões fixas. O sistema não carrega código de nenhum servidor externo.
-
-## Primeiro acesso
-O código de primeiro acesso foi removido: os dados já estão na nuvem. Em um aparelho novo, basta entrar com e-mail e senha. Se algum dia o cofre precisar ser recriado, use "Usar um backup .xlsx".
+- PDFs de faturas e holerites são lidos no navegador e não são enviados a lugar nenhum.
+- CPF, endereço e número completo do cartão não são guardados.
+- Tudo o que vai para o Firebase é criptografado com a sua senha.
+- As bibliotecas ficam na pasta `lib/`, sem carregar código de servidores externos.
+- Excel e PDF baixados não são criptografados: guarde-os em pasta pessoal, nunca no GitHub.
