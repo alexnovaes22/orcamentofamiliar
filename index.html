@@ -133,6 +133,7 @@ input.name{width:100%;min-width:160px;padding:6px 8px;border:1px solid var(--lin
 .lembrete>div{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--warn-bg);border-left:4px solid var(--ochre);border-radius:6px;padding:10px 14px;font-size:.92rem}
 @media (max-width:640px){.lembrete{padding:0 10px}}
 table.fat{table-layout:fixed;min-width:860px}table.fat th{text-align:left}table.fat th.r{text-align:right}table.fat td{overflow:hidden;text-overflow:ellipsis;padding:4px 8px}table.fat th{padding:8px}table.fat input.name{min-width:0!important;width:100%}
+.fluxo{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.95rem;margin-top:4px}
 .cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px;margin-bottom:16px}
 .mcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .mcard .v{font-family:var(--font-num);font-size:1.4rem;font-weight:700;margin:2px 0}
@@ -392,8 +393,8 @@ setInterval(()=>{if(S&&Date.now()-last>(S.settings?.lockMin||15)*60000)sair("Sai
 async function entrar(){
   $("#login").classList.add("hidden");$("#app").classList.remove("hidden");
   ANO=today.getFullYear();MES=today.getMonth()+1;
-  if(migrarV4()){save();toast("Seus dados foram organizados no novo formato.")}
-  S.mes||={};S.fixas||=[];S.cfg||={};S.cfg.fontes||=FONTES_PADRAO.map(f=>({...f}));S.cfg.cnpjFonte||={};
+  const mig4=migrarV4();S.mes||={};S.fixas||=[];S.cfg||={};S.cfg.fontes||=FONTES_PADRAO.map(f=>({...f}));S.cfg.cnpjFonte||={};
+  const mig5=migrarV5();if(mig4||mig5){save();toast("Seus dados foram organizados no novo formato.")}
   $("#view").innerHTML='<p class="muted">Carregando…</p>';
   await restaurarFaturasBackup();await carregarFaturasRecentes();
   VIEW="inicio";render();status("Salvo na nuvem","ok");
@@ -460,17 +461,28 @@ function migrarV4(){
   S.versao=4;return true;
 }
 
+function migrarV5(){
+  if(S.versao>=5)return false;
+  const v=S.v||{};
+  Object.keys(v).forEach(m=>{const r=Number((v[m].resgate||{}).r)||0,ap=Object.entries(v[m]).filter(([k])=>k.startsWith("reserva:")).reduce((a,[,o])=>a+(Number(o.r)||0),0);
+    if(r||ap){const M=MM(m);M.reserva||=[];if(r)M.reserva.push({id:uid4(),tipo:"resgate",desc:"Resgate da poupança (planilha)",valor:r2(r)});if(ap)M.reserva.push({id:uid4(),tipo:"aporte",desc:"Aplicação (planilha)",valor:r2(ap)})}});
+  S.cfg.reserva||={saldo:0,mes:NOW};S.versao=5;return true;
+}
+const reservaMes=m=>{const L=(S.mes[m]||{}).reserva||[];return {resgate:r2(L.filter(x=>x.tipo==="resgate").reduce((a,x)=>a+x.valor,0)),aporte:r2(L.filter(x=>x.tipo==="aporte").reduce((a,x)=>a+x.valor,0))}};
+function reservaSaldo(){const base=S.cfg.reserva||{saldo:0,mes:NOW};let t=Number(base.saldo)||0;Object.keys(S.mes).forEach(m=>{if(m>base.mes){const r=reservaMes(m);t+=r.aporte-r.resgate}});return r2(t)}
+const outraAtiva=(o,m)=>!o.ate||m<=o.ate;
+
 /* ---------- cálculos do mês ---------- */
 const fonteNome=id=>((S.cfg.fontes||[]).find(f=>f.id===id)||{}).nome||id;
 function rendasMes(m){
-  const M=S.mes[m]||{},R={itens:[],liquido:0,bruto:0,desc:0,estimado:0,confirmado:0};
-  (M.rendas||[]).forEach(r=>{R.itens.push({nome:`${fonteNome(r.fonte)}${r.tipo==="13"?" · 13º":r.tipo==="ferias"?" · férias":""}`,valor:r.liquido,status:r.status,origem:r.origem,fonte:r.fonte,tipo:r.tipo});R.liquido+=r.liquido;R.bruto+=r.bruto||0;R.desc+=(r.descontos||[]).reduce((a,d)=>a+d.valor,0)});
+  const M=S.mes[m]||{},R={itens:[],liquido:0,bruto:0,desc:0,estimado:0,confirmado:0,principal:0,complementar:0};
+  (M.rendas||[]).forEach(r=>{R.itens.push({nome:`${fonteNome(r.fonte)}${r.tipo==="13"?" · 13º":r.tipo==="ferias"?" · férias":""}`,valor:r.liquido,status:r.status,origem:r.origem,fonte:r.fonte,tipo:r.tipo,grupo:"principal"});R.liquido+=r.liquido;R.bruto+=r.bruto||0;R.desc+=(r.descontos||[]).reduce((a,d)=>a+d.valor,0)});
   /* estimativas manuais por fonte, quando ainda não há holerite */
-  Object.entries(M.estimativas||{}).forEach(([f,v])=>{if(v&&!(M.rendas||[]).some(r=>r.fonte===f&&r.tipo==="salario")){R.itens.push({nome:fonteNome(f),valor:v,status:"previsto",origem:"manual",fonte:f,tipo:"salario"});R.liquido+=v}});
-  if(M.renata){R.itens.push({nome:"Renda Renata",valor:M.renata,status:"confirmado",origem:"manual"});R.liquido+=M.renata}
-  (M.outras||[]).forEach(o=>{R.itens.push({nome:o.desc,valor:o.valor,status:"confirmado",origem:"manual"});R.liquido+=o.valor});
-  R.itens.forEach(i=>i.status==="previsto"?R.estimado+=i.valor:R.confirmado+=i.valor);
-  ["liquido","bruto","desc","estimado","confirmado"].forEach(k=>R[k]=r2(R[k]));return R;
+  Object.entries(M.estimativas||{}).forEach(([f,v])=>{if(v&&!(M.rendas||[]).some(r=>r.fonte===f&&r.tipo==="salario")){R.itens.push({nome:fonteNome(f),valor:v,status:"previsto",origem:"manual",fonte:f,tipo:"salario",grupo:"principal"});R.liquido+=v}});
+  if(M.renata){R.itens.push({nome:"Renda Renata",valor:M.renata,status:"confirmado",origem:"manual",grupo:"principal"});R.liquido+=M.renata}
+  (M.outras||[]).forEach(o=>{R.itens.push({nome:o.desc,valor:o.valor,status:"confirmado",origem:"manual",grupo:"complementar"});R.liquido+=o.valor});
+  R.itens.forEach(i=>{i.status==="previsto"?R.estimado+=i.valor:R.confirmado+=i.valor;i.grupo==="complementar"?R.complementar+=i.valor:R.principal+=i.valor});
+  ["liquido","bruto","desc","estimado","confirmado","principal","complementar"].forEach(k=>R[k]=r2(R[k]));return R;
 }
 const fatCat=t=>(fatCfg().cat||FAT_CAT_PADRAO)[t]||"Outros";
 function gastosMes(m){
@@ -496,9 +508,10 @@ function parcelasPrevistas(f){
 function fixasPrevistas(f){const M=S.mes[f]||{};return r2(S.fixas.reduce((a,x)=>{if(x.ativa===false)return a;const o=(M.fixas||{})[x.id];return a+(o&&o.valor!=null?o.valor:x.valor)},0))}
 function mediaVariavel(f){
   const det=x=>!(S.mes[x]?.hist&&!S.mes[x]?.usarDetalhado);
-  let meses=[];let m=addMes(f,-1);for(let k=0;k<12&&meses.length<3;k++){if(mesTemDados(m)&&det(m)&&(FAT[m]?.itens||[]).length)meses.push(m);m=addMes(m,-1)}
+  const ini=f>NOW?NOW:addMes(f,-1);
+  let meses=[];let m=ini;for(let k=0;k<24&&meses.length<3;k++){if(mesTemDados(m)&&det(m)&&(FAT[m]?.itens||[]).length)meses.push(m);m=addMes(m,-1)}
   if(!meses.length){
-    const hist=[];m=addMes(f,-1);for(let k=0;k<10&&hist.length<6;k++){if(mesTemDados(m))hist.push(m);m=addMes(m,-1)}
+    const hist=[];m=ini;for(let k=0;k<24&&hist.length<6;k++){if(mesTemDados(m))hist.push(m);m=addMes(m,-1)}
     if(!hist.length)return {valor:0,base:"sem histórico"};
     const vs=hist.map(x=>Math.max(0,gastosMes(x).total-fixasPrevistas(f)-parcelasPrevistas(f))).sort((a,b)=>a-b),md=vs.length%2?vs[(vs.length-1)/2]:(vs[vs.length/2-1]+vs[vs.length/2])/2;
     return {valor:r2(md),base:`mediana de ${hist.length} meses da planilha antiga`,detalhado:false};
@@ -513,14 +526,15 @@ function rendasPrevistas(f){
     const hol=(M.rendas||[]).filter(r=>r.fonte===fo.id&&r.tipo==="salario");
     if(hol.length){const v=hol.reduce((a,r)=>a+r.liquido,0);itens.push({nome:fo.nome,valor:v,est:false});total+=v;return}
     if(M.estimativas&&M.estimativas[fo.id]){itens.push({nome:fo.nome,valor:M.estimativas[fo.id],est:true,manual:true});total+=M.estimativas[fo.id];return}
-    let m=addMes(f,-1);for(let k=0;k<6;k++){const rs=(S.mes[m]?.rendas||[]).filter(r=>r.fonte===fo.id&&r.tipo==="salario");if(rs.length){const v=rs.reduce((a,r)=>a+r.liquido,0);itens.push({nome:fo.nome,valor:v,est:true,ref:m});total+=v;return}m=addMes(m,-1)}
+    let m=addMes(f,-1);for(let k=0;k<36;k++){const rs=(S.mes[m]?.rendas||[]).filter(r=>r.fonte===fo.id&&r.tipo==="salario");if(rs.length){const v=rs.reduce((a,r)=>a+r.liquido,0);itens.push({nome:fo.nome,valor:v,est:true,ref:m});total+=v;return}m=addMes(m,-1)}
   });
   (M.rendas||[]).filter(r=>r.tipo!=="salario").forEach(r=>{itens.push({nome:`${fonteNome(r.fonte)} · ${r.tipo==="13"?"13º":"férias"}`,valor:r.liquido,est:r.status!=="confirmado"});total+=r.liquido});
   if(M.renata){itens.push({nome:"Renda Renata",valor:M.renata,est:false});total+=M.renata}
-  else{const vs=[];let m=addMes(f,-1);for(let k=0;k<6&&vs.length<3;k++){if(S.mes[m]?.renata)vs.push(S.mes[m].renata);m=addMes(m,-1)}if(vs.length){const v=r2(vs.reduce((a,b)=>a+b,0)/vs.length);itens.push({nome:"Renda Renata",valor:v,est:true});total+=v}}
-  if((M.outras||[]).length)(M.outras||[]).forEach(o=>{itens.push({nome:o.desc,valor:o.valor,est:false});total+=o.valor});
-  else{let m=addMes(f,-1);for(let k=0;k<12;k++){const todas=S.mes[m]?.outras||[];if(todas.length){todas.filter(o=>o.recorrente).forEach(o=>{itens.push({nome:o.desc,valor:o.valor,est:true});total+=o.valor});break}m=addMes(m,-1)}}
-  return {itens,total:r2(total)};
+  else{const vs=[];let m=addMes(f,-1);for(let k=0;k<36&&vs.length<3;k++){if(S.mes[m]?.renata)vs.push(S.mes[m].renata);m=addMes(m,-1)}if(vs.length){const v=r2(vs.reduce((a,b)=>a+b,0)/vs.length);itens.push({nome:"Renda Renata",valor:v,est:true});total+=v}}
+  let comp=0;
+  if((M.outras||[]).length)(M.outras||[]).forEach(o=>{itens.push({nome:o.desc,valor:o.valor,est:false,comp:true});comp+=o.valor});
+  else{let m=addMes(f,-1);for(let k=0;k<36;k++){const todas=S.mes[m]?.outras||[];if(todas.length){todas.filter(o=>o.recorrente&&outraAtiva(o,f)).forEach(o=>{itens.push({nome:o.desc,valor:o.valor,est:true,comp:true,ate:o.ate});comp+=o.valor});break}m=addMes(m,-1)}}
+  return {itens,total:r2(total+comp),principal:r2(total),complementar:r2(comp)};
 }
 function previsao(f){
   const R=rendasPrevistas(f),fix=fixasPrevistas(f),par=parcelasPrevistas(f),med=mediaVariavel(f),meta=(S.mes[f]||{}).meta;
@@ -579,13 +593,18 @@ function vInicio(){
   if(G.reemb>0)alertas.push({n:"info",t:`${brl0(G.reemb)} de gastos de terceiros nos cartões`,d:"Confirme se já foram reembolsados."});
   const semHol=prox.flatMap(p=>p.R.itens.filter(i=>i.est&&/13º|férias/.test(i.nome)).map(i=>`${i.nome} (${nomeMes(p.f)})`));
   if(semHol.length)alertas.push({n:"info",t:"13º e férias ainda sem holerite",d:semHol.join(", ")+". Quando o holerite chegar, importe para confirmar o valor."});
-  const comprom=R.liquido?((G.porCat["Casa e consórcio"]||0)+parcelasPrevistas(addMes(ref,1)))/R.liquido:0;
-  if(comprom>0.35)alertas.push({n:"warn",t:`Dívidas e parcelas comprometem ${Math.round(comprom*100)}% da renda`,d:"Acima de 30% o orçamento fica sem folga. Evite novos parcelamentos."});
-  const saldoRef=r2(R.liquido-G.total);
+  const RP=R.principal||R.liquido,comprom=RP?((G.porCat["Casa e consórcio"]||0)+parcelasPrevistas(addMes(ref,1)))/RP:0;
+  if(comprom>0.35)alertas.push({n:"warn",t:`Dívidas e parcelas comprometem ${Math.round(comprom*100)}% da renda principal`,d:"Acima de 30% o orçamento fica sem folga. Evite novos parcelamentos."});
+  const saldoRef=r2(R.liquido-G.total),RS=reservaMes(ref),caixa=r2(saldoRef+RS.resgate-RS.aporte);
+  if(RS.resgate&&saldoRef<0)alertas.unshift({n:"bad",t:`${Nome(ref)} só fechou porque usou ${brl0(RS.resgate)} da reserva`,d:`Sem a reserva, faltariam ${brl0(-saldoRef)}. Retirar da poupança não é renda: diminui o seu patrimônio.`});
+  if(R.complementar&&saldoRef>=0&&saldoRef<R.complementar)alertas.push({n:"warn",t:`O mês só fechou positivo graças à renda complementar (${brl0(R.complementar)})`,d:"Rendas temporárias, como bolsas, não devem sustentar gastos fixos. Planeje para quando ela acabar."});
+  const comp2=prox.flatMap(p=>p.R.itens.filter(i=>i.comp&&i.ate).map(i=>`${i.nome} até ${nomeMes(i.ate)}`));
+  if(comp2.length)alertas.push({n:"info",t:"Renda complementar com data para acabar",d:[...new Set(comp2)].join(", ")+"."});
   $("#view").innerHTML=`
   <section class="panel" style="padding:22px">
     <h1 style="font-size:1.5rem;margin-bottom:6px">${G.total?`Em ${nomeMes(ref)}, ${saldoRef>=0?`<span class="pos">sobraram ${brl0(saldoRef)}</span>`:`<span class="neg">faltaram ${brl0(-saldoRef)}</span>`}`:`Sem lançamentos em ${nomeMes(ref)}`}</h1>
-    <p class="muted">Entraram ${brl0(R.liquido)} líquidos e saíram ${brl0(G.total)}${G.reemb?` (fora ${brl0(G.reemb)} de terceiros)`:""}.</p>
+    <div class="fluxo"><span>Renda principal <b>${brl0(R.principal)}</b></span><span>+ complementar <b>${brl0(R.complementar)}</b></span><span>− gastos <b>${brl0(G.total)}</b></span><span>= resultado <b class="${saldoRef<0?"neg":"pos"}">${brl0(saldoRef)}</b></span>${RS.resgate||RS.aporte?`<span>${RS.resgate?`+ retirado da reserva <b>${brl0(RS.resgate)}</b>`:""}${RS.aporte?` − guardado <b>${brl0(RS.aporte)}</b>`:""}</span><span>= saldo final <b class="${caixa<0?"neg":"pos"}">${brl0(caixa)}</b></span>`:""}</div>
+    <p class="small muted" style="margin-top:6px">${G.reemb?`Gastos de terceiros (${brl0(G.reemb)}) ficam fora. `:""}Reserva hoje: <b>${brl0(reservaSaldo())}</b>.</p>
   </section>
   <h2 style="margin:4px 0 10px">Próximos meses</h2>
   <div class="cards3">${prox.map(p=>`<div class="mcard" style="border-top:5px solid ${corSaldo(p.saldo)}">
@@ -597,7 +616,7 @@ function vInicio(){
     </div>`).join("")}</div>
   ${alertas.length?`<section class="panel"><h2 style="margin-bottom:10px">Atenção</h2>${alertas.map(a=>`<div class="alert ${a.n==="bad"?"bad":a.n==="info"?"info":""}"><b>${esc(a.t)}</b><br><span class="small">${esc(a.d)}</span></div>`).join("")}</section>`:`<section class="panel"><div class="alert ok"><b>Tudo em ordem.</b> Nenhum alerta para os próximos meses.</div></section>`}
   <section class="panel"><div class="panel-h"><h2>Para onde foi o dinheiro em ${nomeMes(ref)}</h2><span class="small muted">comparado com a média dos 3 meses anteriores</span></div>
-    ${cats.length?cats.map(([c,v])=>{const md=medCat[c],dif=md?Math.round((v/md-1)*100):null,pr=R.liquido?v/R.liquido:0;return `<div class="catrow"><span class="dot" style="background:${CAT_COR[c]||"#999"}"></span><span class="nm">${esc(c)}</span><span class="bar"><span style="width:${Math.min(100,pr*100)}%;background:${CAT_COR[c]||"#999"}"></span></span><span class="num r">${brl0(v)}</span><span class="small muted r">${Math.round(pr*100)}% da renda</span><span class="small r" style="color:${dif>15?"var(--red)":dif<-15?"var(--green)":"var(--muted)"}">${dif==null?"":(dif>0?"+":"")+dif+"%"}</span></div>`}).join(""):'<p class="muted">Importe as faturas e lance os gastos para ver o diagnóstico.</p>'}
+    ${cats.length?cats.map(([c,v])=>{const md=medCat[c],dif=md?Math.round((v/md-1)*100):null,pr=(R.principal||R.liquido)?v/(R.principal||R.liquido):0;return `<div class="catrow"><span class="dot" style="background:${CAT_COR[c]||"#999"}"></span><span class="nm">${esc(c)}</span><span class="bar"><span style="width:${Math.min(100,pr*100)}%;background:${CAT_COR[c]||"#999"}"></span></span><span class="num r">${brl0(v)}</span><span class="small muted r">${Math.round(pr*100)}% da renda principal</span><span class="small r" style="color:${dif>15?"var(--red)":dif<-15?"var(--green)":"var(--muted)"}">${dif==null?"":(dif>0?"+":"")+dif+"%"}</span></div>`}).join(""):'<p class="muted">Importe as faturas e lance os gastos para ver o diagnóstico.</p>'}
   </section>`;
 }
 
@@ -609,8 +628,11 @@ function vRendas(){
     <div class="tw"><table><tbody>${(r.rubricas||[]).map(x=>`<tr><td>${esc(x.desc)}</td><td class="r num" style="color:${x.lado==="d"?"var(--red)":"inherit"}">${x.lado==="d"?"−":""}${brl(x.valor)}</td></tr>`).join("")||(r.descontos||[]).map(d=>`<tr><td>${esc(d.desc)}</td><td class="r num" style="color:var(--red)">−${brl(d.valor)}</td></tr>`).join("")}</tbody></table></div>
     <div class="row" style="padding:6px 0"><button class="btn sm" data-rdel="${r.id}">Remover</button>${r.confere&&!(r.confere.proventos&&r.confere.descontos&&r.confere.liquido)?'<span class="small neg">A soma das linhas não bateu com os totais do holerite: confira.</span>':(r.origem==="holerite"?'<span class="small pos">✓ Somas conferidas com os totais do holerite</span>':"")}</div></details>`;
   $("#view").innerHTML=`
-  <div class="sum3"><div><div class="k">Renda líquida de ${nomeMes(m)}</div><div class="v">${brl0(R.liquido)}</div></div>
-    <div><div class="k">Bruto</div><div class="v">${brl0(R.bruto)}</div></div><div><div class="k">Descontos em folha</div><div class="v">${brl0(R.desc)}</div></div></div>
+  <div class="sum4"><div><div class="k">Renda principal</div><div class="v">${brl0(R.principal)}</div><div class="small muted">holerites, Renata, 13º e férias</div></div>
+    <div><div class="k">Renda complementar</div><div class="v">${brl0(R.complementar)}</div><div class="small muted">temporária</div></div>
+    <div><div class="k">Movimento da reserva</div><div class="v">${(()=>{const r=reservaMes(m);return r.resgate||r.aporte?(r.resgate?"+"+brl0(r.resgate):"")+(r.aporte?" −"+brl0(r.aporte):""):"—"})()}</div><div class="small muted">não é renda</div></div>
+    <div><div class="k">Descontos em folha</div><div class="v">${brl0(R.desc)}</div><div class="small muted">bruto ${brl0(R.bruto)}</div></div></div>
+  <h2 style="margin:6px 0 10px">1. Renda principal</h2>
   <section class="panel"><div class="panel-h"><h2>Holerites</h2><div class="row"><button class="btn primary" id="hImp">Importar holerites (PDF)</button><input type="file" id="hImpF" accept="application/pdf,.pdf" multiple hidden></div></div>
     <p class="small muted" style="margin-top:-4px">O sistema lê proventos, descontos e líquido, confere as somas e identifica 13º e férias. A leitura acontece no seu computador.</p>
     <div id="hRev"></div>
@@ -619,20 +641,29 @@ function vRendas(){
   </section>
   <section class="panel"><h2 style="margin-bottom:8px">Renda Renata</h2>
     <label class="small" style="display:flex;gap:8px;align-items:center">Valor recebido em ${nomeMes(m)}: <input class="v" inputmode="decimal" id="rRen" value="${M.renata?nf.format(M.renata):""}" placeholder="0,00"></label></section>
-  <section class="panel"><div class="panel-h"><h2>Outras rendas</h2><span class="small muted">bolsa, estágio, bicos…</span></div>
-    ${(M.outras||[]).map(o=>`<div class="lin"><span>${esc(o.desc)}${o.recorrente?' <span class="pill">todo mês</span>':""}</span><span class="num">${brl(o.valor)}</span><button class="btn sm" data-odel="${o.id}">×</button></div>`).join("")||'<p class="small muted">Nenhuma neste mês.</p>'}
-    <div class="row" style="margin-top:10px"><input type="text" id="oDesc" placeholder="Descrição" style="flex:2;min-width:160px"><input class="v" inputmode="decimal" id="oVal" placeholder="Valor"><label class="small"><input type="checkbox" id="oRec"> repete todo mês</label><button class="btn" id="oAdd">Adicionar</button></div></section>
+  <h2 style="margin:6px 0 10px">2. Renda complementar</h2>
+  <section class="panel"><p class="small muted" style="margin-top:0">Bolsas de estudo, estágio, bicos, vendas. Conta no mês, mas <b>não</b> entra no cálculo do peso das dívidas nem da evolução da sua renda, porque é temporária. Se ela tem data para acabar, informe: as previsões param de contar a partir daí.</p>
+    ${(M.outras||[]).map(o=>`<div class="lin"><span>${esc(o.desc)}${o.recorrente?` <span class="pill">todo mês${o.ate?` até ${nomeMes(o.ate)}`:""}</span>`:""}</span><span class="num">${brl(o.valor)}</span><button class="btn sm" data-odel="${o.id}">×</button></div>`).join("")||'<p class="small muted">Nenhuma neste mês.</p>'}
+    <div class="row" style="margin-top:10px"><input type="text" id="oDesc" placeholder="Descrição (ex.: Bolsa de estudo)" style="flex:2;min-width:180px"><input class="v" inputmode="decimal" id="oVal" placeholder="Valor"><label class="small"><input type="checkbox" id="oRec"> repete todo mês</label><label class="small">até <input type="month" id="oAte"></label><button class="btn" id="oAdd">Adicionar</button></div></section>
   <section class="panel"><div class="panel-h"><h2>13º salário e férias</h2><span class="small muted">com ou sem holerite</span></div>
     <p class="small muted" style="margin-top:-4px">Informe aqui o que você espera receber neste mês. Sem holerite, o valor entra nas previsões como estimativa; quando o holerite chegar, importe para confirmar.</p>
     ${(M.rendas||[]).filter(r=>r.tipo!=="salario").map(r=>`<div class="lin"><span>${esc(fonteNome(r.fonte))} · ${r.tipo==="13"?"13º":"férias"} ${r.status==="confirmado"?'<span class="pill ok">confirmado</span>':'<span class="pill warn">previsto</span>'}</span><span class="num">${brl(r.liquido)}</span><button class="btn sm" data-rdel="${r.id}">×</button></div>`).join("")||'<p class="small muted">Nada informado neste mês.</p>'}
-    <div class="row" style="margin-top:10px"><select id="eFonte" style="width:auto">${fontes.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join("")}</select><select id="eTipo" style="width:auto"><option value="13">13º salário</option><option value="ferias">Férias</option></select><input class="v" inputmode="decimal" id="eVal" placeholder="Valor líquido"><button class="btn" id="eAdd">Adicionar previsão</button></div></section>`;
+    <div class="row" style="margin-top:10px"><select id="eFonte" style="width:auto">${fontes.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join("")}</select><select id="eTipo" style="width:auto"><option value="13">13º salário</option><option value="ferias">Férias</option></select><input class="v" inputmode="decimal" id="eVal" placeholder="Valor líquido"><button class="btn" id="eAdd">Adicionar previsão</button></div></section>
+  <h2 style="margin:6px 0 10px">3. Reserva (poupança)</h2>
+  <section class="panel"><p class="small muted" style="margin-top:0">Dinheiro que já era seu. <b>Retirar</b> ajuda a fechar o mês, mas não é renda: diminui o seu patrimônio. <b>Guardar</b> não é gasto: forma reserva.</p>
+    <div class="row" style="align-items:center;margin-bottom:10px"><span>Saldo estimado da reserva: <b class="num">${brl(reservaSaldo())}</b></span><button class="btn sm" id="rsBase">Informar saldo atual</button></div>
+    ${((M.reserva)||[]).map(x=>`<div class="lin"><span>${x.tipo==="resgate"?'<span class="pill warn">retirei</span>':'<span class="pill ok">guardei</span>'} ${esc(x.desc||"")}</span><span class="num">${x.tipo==="resgate"?"+":"−"}${brl(x.valor)}</span><button class="btn sm" data-rsdel="${x.id}">×</button></div>`).join("")||'<p class="small muted">Nenhum movimento neste mês.</p>'}
+    <div class="row" style="margin-top:10px"><select id="rsTipo" style="width:auto"><option value="resgate">Retirei da reserva</option><option value="aporte">Guardei na reserva</option></select><input type="text" id="rsDesc" placeholder="Descrição (opcional)" style="flex:2;min-width:160px"><input class="v" inputmode="decimal" id="rsVal" placeholder="Valor"><button class="btn" id="rsAdd">Adicionar</button></div></section>`;
   const atual=()=>{save();const y=scrollY;vRendas();scrollTo(0,y)};
   $("#hImp").onclick=()=>$("#hImpF").click();
   $("#hImpF").onchange=async e=>{const fs=[...e.target.files];e.target.value="";if(fs.length)await holImportar(fs)};
   $$("[data-est]").forEach(i=>i.onchange=()=>{(M.estimativas||={})[i.dataset.est]=parseBR(i.value)||0;atual()});
   $("#rRen").onchange=e=>{M.renata=parseBR(e.target.value)||0;atual()};
   $$("[data-odel]").forEach(b=>b.onclick=()=>{M.outras=M.outras.filter(o=>o.id!==b.dataset.odel);atual()});
-  $("#oAdd").onclick=()=>{const d=$("#oDesc").value.trim(),v=parseBR($("#oVal").value);if(!d||!v)return;(M.outras||=[]).push({id:uid4(),desc:d,valor:v,recorrente:$("#oRec").checked});atual()};
+  $("#oAdd").onclick=()=>{const d=$("#oDesc").value.trim(),v=parseBR($("#oVal").value);if(!d||!v)return;(M.outras||=[]).push({id:uid4(),desc:d,valor:v,recorrente:$("#oRec").checked,ate:$("#oAte").value||null});atual()};
+  $("#rsAdd").onclick=()=>{const v=parseBR($("#rsVal").value);if(!v)return;(M.reserva||=[]).push({id:uid4(),tipo:$("#rsTipo").value,desc:$("#rsDesc").value.trim(),valor:v});atual()};
+  $$("[data-rsdel]").forEach(b=>b.onclick=()=>{M.reserva=M.reserva.filter(x=>x.id!==b.dataset.rsdel);atual()});
+  $("#rsBase").onclick=()=>{const v=prompt("Quanto você tem guardado hoje na reserva/poupança? (ex.: 2.500,00)");if(v===null)return;S.cfg.reserva={saldo:parseBR(v),mes:mk()};atual()};
   $$("[data-rdel]").forEach(b=>b.onclick=()=>{if(confirm("Remover este lançamento de renda?")){M.rendas=M.rendas.filter(r=>r.id!==b.dataset.rdel);atual()}});
   $("#eAdd").onclick=()=>{const v=parseBR($("#eVal").value);if(!v)return;M.rendas.push({id:uid4(),fonte:$("#eFonte").value,tipo:$("#eTipo").value,bruto:v,descontos:[],liquido:v,origem:"manual",status:"previsto"});atual()};
 }
@@ -731,12 +762,13 @@ function vPlano(){
   const meses=Array.from({length:12},(_,k)=>addMes(NOW,k+1)),ps=meses.map(previsao);let acc=0;
   $("#view").innerHTML=`<section class="panel"><div class="panel-h"><h2>Próximos 12 meses</h2><span class="small muted">calculado sozinho; ajuste a meta de gastos do dia a dia se quiser</span></div>
     <p class="small muted" style="margin-top:-4px"><b>Como é calculado:</b> rendas (último holerite de cada vínculo, Renda Renata média, outras rendas que se repetem, 13º e férias informados) − contas fixas − parcelas de cartão já assumidas − gastos do dia a dia (média dos últimos meses ou a sua meta).</p>
-    <div class="tw"><table class="plan"><thead><tr><th>Mês</th><th class="r">Rendas</th><th class="r">Contas fixas</th><th class="r">Parcelas cartão</th><th class="r">Dia a dia</th><th class="r">Saldo</th><th class="r">Acumulado</th><th>Previsão</th></tr></thead><tbody>
-    ${ps.map(p=>{acc=r2(acc+p.saldo);return `<tr><td><b>${Nome(p.f)}</b></td><td class="r num" title="${esc(p.R.itens.map(i=>`${i.nome}: ${brl(i.valor)}${i.est?" (estimado)":""}`).join("\n"))}">${brl0(p.R.total)}${p.R.itens.some(i=>i.est)?' <span class="small muted">*</span>':""}</td><td class="r num">${brl0(p.fix)}</td><td class="r num">${brl0(p.par)}</td>
+    <div class="tw"><table class="plan"><thead><tr><th>Mês</th><th class="r">Renda principal</th><th class="r">Complementar</th><th class="r">Contas fixas</th><th class="r">Parcelas cartão</th><th class="r">Dia a dia</th><th class="r">Saldo</th><th class="r">Acumulado</th><th>Previsão</th></tr></thead><tbody>
+    ${ps.map(p=>{acc=r2(acc+p.saldo);return `<tr><td><b>${Nome(p.f)}</b></td><td class="r num" title="${esc(p.R.itens.filter(i=>!i.comp).map(i=>`${i.nome}: ${brl(i.valor)}${i.est?" (estimado)":""}`).join("\n"))}">${brl0(p.R.principal)}${p.R.itens.some(i=>i.est&&!i.comp)?' <span class="small muted">*</span>':""}</td><td class="r num" title="${esc(p.R.itens.filter(i=>i.comp).map(i=>`${i.nome}: ${brl(i.valor)}${i.ate?" até "+nomeMes(i.ate):""}`).join("\n"))}">${p.R.complementar?brl0(p.R.complementar):"—"}</td><td class="r num">${brl0(p.fix)}</td><td class="r num">${brl0(p.par)}</td>
       <td class="r"><input class="v" inputmode="decimal" data-meta="${p.f}" value="${p.meta!=null&&p.meta!==""?nf.format(p.meta):""}" placeholder="${nf.format(p.med.valor)}" title="Deixe em branco para usar a média (${brl(p.med.valor)})"></td>
       <td class="r num" style="color:${corSaldo(p.saldo)}"><b>${brl0(p.saldo)}</b></td><td class="r num" style="color:${acc<0?"var(--red)":"inherit"}">${brl0(acc)}</td>
       <td><span class="pill ${p.aval==="Otimista"?"warn":p.aval==="Conservadora"?"ok":""}" title="${esc(p.motivos.join(" · "))}">${p.aval}</span></td></tr>`}).join("")}
-    </tbody></table></div><p class="small muted">* inclui renda estimada (sem holerite). Passe o mouse sobre os valores para ver os detalhes.</p></section>
+    </tbody></table></div><p class="small muted">* inclui renda estimada (sem holerite). Passe o mouse sobre os valores para ver os detalhes. A reserva não entra no cálculo.</p>
+    ${(()=>{let a=0,pior=0;ps.forEach(p=>{a+=p.saldo;pior=Math.min(pior,a)});const rs=reservaSaldo();return pior<0?`<div class="alert ${rs>=-pior?"":"bad"}"><b>O acumulado chega a ${brl0(pior)}.</b> ${rs>=-pior?`A sua reserva (${brl0(rs)}) cobre esse período, mas ela seria consumida.`:`A reserva estimada (${brl0(rs)}) não cobre: é preciso cortar gastos ou aumentar a renda.`}</div>`:`<div class="alert ok"><b>Sem meses negativos no acumulado.</b> Reserva estimada: ${brl0(rs)}.</div>`})()}</section>
     <section class="panel"><h2 style="margin-bottom:8px">Entradas e saídas previstas</h2><div style="position:relative;height:280px"><canvas id="cPlano" aria-label="Gráfico de rendas e gastos previstos"></canvas></div></section>`;
   $$("[data-meta]").forEach(i=>i.onchange=()=>{const M=MM(i.dataset.meta);M.meta=i.value.trim()===""?null:parseBR(i.value);save();vPlano()});
   const cor=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -1145,19 +1177,20 @@ async function fatSalvarAgora(m){const {iv,ct}=await enc(KEY,{itens:FAT[m].itens
 async function restaurarFaturasBackup(){if(!BACKUP_FAT)return;for(const [m,itens] of Object.entries(BACKUP_FAT)){FAT[m]={itens};try{await fatSalvarAgora(m)}catch{}}BACKUP_FAT=null}
 async function exportXlsx(){
   const meses=Array.from({length:12},(_,i)=>mk(ANO,i+1));await Promise.all(meses.map(fatCarregar));
-  const res=[["Mês","Rendas líquidas","Contas fixas","Cartões (família)","Outros gastos","Planilha antiga","Total de gastos","Saldo"]];
-  meses.forEach(m=>{const R=rendasMes(m),G=gastosMes(m);if(!R.liquido&&!G.total)return;res.push([Nome(m),R.liquido,G.fixas,G.cartao,G.outros,G.planilha,G.total,r2(R.liquido-G.total)])});
+  const res=[["Mês","Renda principal","Renda complementar","Contas fixas","Cartões (família)","Outros gastos","Planilha antiga","Total de gastos","Resultado","Retirado da reserva","Guardado","Saldo final"]];
+  meses.forEach(m=>{const R=rendasMes(m),G=gastosMes(m),RS=reservaMes(m);if(!R.liquido&&!G.total)return;const res0=r2(R.liquido-G.total);res.push([Nome(m),R.principal,R.complementar,G.fixas,G.cartao,G.outros,G.planilha,G.total,res0,RS.resgate,RS.aporte,r2(res0+RS.resgate-RS.aporte)])});
   const ren=[["Mês","Origem","Descrição","Bruto","Descontos","Líquido","Situação"]];
-  meses.forEach(m=>{const M=S.mes[m];if(!M)return;(M.rendas||[]).forEach(r=>ren.push([Nome(m),r.origem,`${fonteNome(r.fonte)}${r.tipo!=="salario"?" "+r.tipo:""}`,r.bruto,r2((r.descontos||[]).reduce((a,d)=>a+d.valor,0)),r.liquido,r.status]));if(M.renata)ren.push([Nome(m),"manual","Renda Renata","","",M.renata,"confirmado"]);(M.outras||[]).forEach(o=>ren.push([Nome(m),"manual",o.desc,"","",o.valor,"confirmado"]))});
+  meses.forEach(m=>{const M=S.mes[m];if(!M)return;(M.rendas||[]).forEach(r=>ren.push([Nome(m),r.origem,`${fonteNome(r.fonte)}${r.tipo!=="salario"?" "+r.tipo:""}`,r.bruto,r2((r.descontos||[]).reduce((a,d)=>a+d.valor,0)),r.liquido,r.status]));if(M.renata)ren.push([Nome(m),"manual","Renda Renata","","",M.renata,"confirmado"]);(M.outras||[]).forEach(o=>ren.push([Nome(m),"complementar",o.desc,"","",o.valor,o.ate?"até "+o.ate:"confirmado"]))});
   const car=[["Mês","Data","Local","Parcela","Tipo","Categoria","Valor","Observações","Cartão"]];
   meses.forEach(m=>(FAT[m]?.itens||[]).forEach(i=>car.push([Nome(m),i.data,i.descricao,i.parcela?`${i.parcela.n}/${i.parcela.t}`:"",i.tipo||"",fatEhReemb(i.tipo)?"Terceiros":fatCat(i.tipo),i.valor,i.obs||"",i.cartao])));
   const fix=[["Conta","Categoria","Valor padrão"],...S.fixas.map(f=>[f.nome,f.cat,f.valor])];
+  const rsv=[["Mês","Movimento","Descrição","Valor"]];meses.forEach(m=>((S.mes[m]||{}).reserva||[]).forEach(x=>rsv.push([Nome(m),x.tipo==="resgate"?"Retirada":"Guardado",x.desc||"",x.valor])));
   const out=[["Mês","Descrição","Categoria","Valor"]];meses.forEach(m=>(S.mes[m]?.gastos||[]).filter(g=>g.origem!=="planilha").forEach(g=>out.push([Nome(m),g.desc,g.cat,g.valor])));
   const fat={};Object.entries(FAT).forEach(([m,F])=>{if(F&&F.itens&&F.itens.length)fat[m]=F.itens});
   const json=JSON.stringify({versao:4,S:{...S,user:undefined},FAT:fat}),chunks=[["Backup do sistema. Não edite esta aba."]];for(let i=0;i<json.length;i+=30000)chunks.push([json.slice(i,i+30000)]);
   const wb=XLSX.utils.book_new(),fmt=ws=>{for(const r in ws)if(r[0]!=="!"&&typeof ws[r].v==="number")ws[r].z="#,##0.00";return ws};
-  [["Resumo "+ANO,res,[14,15,13,15,13,14,14,12]],["Rendas",ren,[14,10,26,12,12,12,12]],["Cartões",car,[12,7,34,8,16,18,11,26,14]],["Contas fixas",fix,[30,20,12]],["Outros gastos",out,[12,34,20,11]]].forEach(([n,a,w])=>{const ws=fmt(XLSX.utils.aoa_to_sheet(a));ws["!cols"]=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,n)});
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(chunks),"backup");wb.Workbook={Sheets:[{},{},{},{},{},{Hidden:1}]};
+  [["Resumo "+ANO,res,[14,15,13,15,13,14,14,12]],["Rendas",ren,[14,10,26,12,12,12,12]],["Cartões",car,[12,7,34,8,16,18,11,26,14]],["Contas fixas",fix,[30,20,12]],["Outros gastos",out,[12,34,20,11]],["Reserva",rsv,[14,12,30,12]]].forEach(([n,a,w])=>{const ws=fmt(XLSX.utils.aoa_to_sheet(a));ws["!cols"]=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,n)});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(chunks),"backup");wb.Workbook={Sheets:[{},{},{},{},{},{},{Hidden:1}]};
   download(`orcamento-familia-${ANO}-${new Date().toISOString().slice(0,10)}.xlsx`,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
   (S.settings||={}).ultimoBackup=new Date().toISOString();save();mostrarLembrete();toast("Planilha baixada. Guarde no Google Drive ou numa pasta só sua.");
 }
