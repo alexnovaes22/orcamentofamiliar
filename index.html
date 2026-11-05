@@ -114,8 +114,8 @@ td.r{text-align:right;white-space:nowrap}
 td.ref{font-size:.8rem;color:var(--muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 td.ref.up{color:var(--red);font-weight:600}
 tr.tot td{font-weight:700;background:var(--sunk);padding-top:9px;padding-bottom:9px}
-input.v{width:118px;text-align:right;border:1px solid transparent;background:transparent;border-radius:5px;padding:6px 8px;font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:.92rem}
-input.v:hover{border-color:var(--line)}
+input.v{width:118px;text-align:right;border:1px solid var(--line);background:var(--sunk);border-radius:5px;padding:6px 8px;font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:.92rem}
+input.v:hover{border-color:var(--blue)}input.v.neg{color:var(--green);font-weight:600}
 input.v:focus{border-color:var(--blue);background:var(--sunk);outline:none}
 input.v.zero{color:var(--muted)}
 input.name{width:100%;min-width:160px;padding:6px 8px;border:1px solid var(--line);border-radius:5px;background:var(--sunk)}
@@ -132,6 +132,7 @@ input.name{width:100%;min-width:160px;padding:6px 8px;border:1px solid var(--lin
 .lembrete{max-width:1180px;margin:16px auto 0;padding:0 20px}
 .lembrete>div{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--warn-bg);border-left:4px solid var(--ochre);border-radius:6px;padding:10px 14px;font-size:.92rem}
 @media (max-width:640px){.lembrete{padding:0 10px}}
+table.conf td,table.conf th{padding:8px 10px;vertical-align:top}table.conf th{text-align:left}table.conf th.r{text-align:right}table.conf input.v{width:120px}table.fat input.v{width:100%;min-width:0;box-sizing:border-box;padding:6px 6px}
 table.fat{table-layout:fixed;min-width:860px}table.fat th{text-align:left}table.fat th.r{text-align:right}table.fat td{overflow:hidden;text-overflow:ellipsis;padding:4px 8px}table.fat th{padding:8px}table.fat input.name{min-width:0!important;width:100%}
 .fluxo{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.95rem;margin-top:4px}
 .cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px;margin-bottom:16px}
@@ -865,7 +866,8 @@ function fatDetectarBanco(txt){
   if(/PORTO|PORTOPLUS|PORTO BANK/.test(t))return "PORTO";
   return "";
 }
-const FAT_IGNORAR=/^(PAGAMENTO|PGTO|OBRIGADO PELO PAGAMENTO|SALDO FATURA ANTERIOR|TOTAL DA FATURA ANTERIOR|AJUSTE CRED|AJUSTE CREDITO|ESTORNO|CREDITO|VALOR TOTAL|TOTAL)/;
+const FAT_IGNORAR=/^(PAGAMENTO|PGTO|PAGTO|OBRIGADO PELO PAGAMENTO|SALDO FATURA ANTERIOR|SALDO ANTERIOR|TOTAL DA FATURA ANTERIOR|VALOR TOTAL|TOTAL|DEBITO AUTOMATICO)/;
+const FAT_CREDITO=/^(ESTORNO|CREDITO|CRED |AJUSTE CRED|AJUSTE CREDITO|DEVOLUCAO|CANCELAMENTO|REEMBOLSO|CASHBACK)/;
 function fatParcela(desc){
   const pats=[/\bPARC\s*(\d{1,2})\s*\/\s*(\d{1,2})\b/i,/\b(\d{1,2})\s+DE\s+(\d{1,2})\b/i,/(?:^|\s)(\d{2})\/(\d{2})(?=\s|$)/];
   for(const re of pats){const m=desc.match(re);if(m){const n=+m[1],t=+m[2];if(n>=1&&t>=2&&n<=t&&t<=60)return {n,t,limpa:(desc.slice(0,m.index)+" "+desc.slice(m.index+m[0].length)).replace(/\s+/g," ").trim()}}}
@@ -900,10 +902,12 @@ function fatInterpretar(linhas,bancoForcado){
     let [,dd,mm,desc,val,dc]=m;let v=FAT_VAL(val);if(dc==="C")v=-Math.abs(v);
     desc=desc.trim();const ND=FAT_NORM(desc);
     if(!isFinite(v)){continue}
-    if(v<0||secaoCredito||FAT_IGNORAR.test(ND)){ignorados.push({data:`${dd}/${mm}`,descricao:desc,valor:v,motivo:v<0?"crédito ou pagamento":"pagamento/saldo"});continue}
+    if(FAT_IGNORAR.test(ND)){ignorados.push({data:`${dd}/${mm}`,descricao:desc,valor:v,motivo:"pagamento ou saldo da fatura"});continue}
     if(v===0)continue;
+    /* estorno, crédito ou devolução: entra como valor negativo e abate o gasto */
+    if(v<0||secaoCredito||FAT_CREDITO.test(ND))v=-Math.abs(v);
     const p=fatParcela(desc);
-    itens.push({data:`${dd}/${mm}`,descricao:fatLimparDesc(p.limpa,banco),original:desc,parcela:p.n?{n:p.n,t:p.t}:null,valor:Math.round(v*100)/100,banco,titular,final});
+    itens.push({data:`${dd}/${mm}`,descricao:fatLimparDesc(p.limpa,banco),original:desc,parcela:p.n?{n:p.n,t:p.t}:null,valor:Math.round(v*100)/100,banco,titular,final,...(v<0?{estorno:true}:{})});
   }
   return {banco,itens,ignorados};
 }
@@ -948,7 +952,7 @@ let fatTimer=null;
 function fatSalvar(m){
   clearTimeout(fatTimer);status("Salvando…");
   fatTimer=setTimeout(async()=>{
-    try{const {iv,ct}=await enc(KEY,{itens:FAT[m].itens});await fatRef(m).set({iv,ct,atualizado:firebase.firestore.FieldValue.serverTimestamp()});status("Salvo na nuvem às "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),"ok")}
+    try{const {iv,ct}=await enc(KEY,{itens:FAT[m].itens,faturas:FAT[m].faturas||[],totais:FAT[m].totais||{}});await fatRef(m).set({iv,ct,atualizado:firebase.firestore.FieldValue.serverTimestamp()});status("Salvo na nuvem às "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),"ok")}
     catch(e){status("Não salvou as faturas","bad");if(e.code==="permission-denied")alert("O Firebase recusou salvar as faturas. Atualize as regras do Firestore do projeto do orçamento (veja o README) e tente de novo.")}
   },500);
 }
@@ -973,6 +977,32 @@ async function fatLerArquivo(file){
 }
 const fatMascarar=t=>t.replace(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g,"XXX.XXX.XXX-XX").replace(/\b(\d{4})[ .-]?(\d{4}|X{4})[ .-]?(\d{4}|X{4})[ .-]?(\d{4})\b/g,"XXXX XXXX XXXX $4");
 
+
+function fatConferencia(F){
+  const its=F.itens||[],rows=[];
+  (F.faturas||[]).forEach(f=>{const ls=its.filter(i=>i.fid===f.id);if(!ls.length)return;
+    rows.push({tp:"f",id:f.id,nome:FAT_BANCO_NOME[f.banco]||f.banco||"Fatura",det:(f.cartoes||[]).join(", "),arq:f.arquivo,total:f.totalPdf!=null?f.totalPdf:(f.totalManual??null),auto:f.totalPdf!=null,lanc:r2(ls.reduce((a,i)=>a+i.valor,0)),n:ls.length})});
+  const sem=its.filter(i=>!i.fid&&!i.manual);
+  [...new Set(sem.map(i=>i.banco||"?"))].forEach(b=>{const ls=sem.filter(i=>(i.banco||"?")===b);
+    rows.push({tp:"b",id:b,nome:FAT_BANCO_NOME[b]||b,det:[...new Set(ls.map(i=>i.cartao))].join(", "),arq:"importada antes da conferência",total:(F.totais||{})[b]??null,auto:false,lanc:r2(ls.reduce((a,i)=>a+i.valor,0)),n:ls.length})});
+  const man=its.filter(i=>i.manual);
+  return {rows,man:r2(man.reduce((a,i)=>a+i.valor,0)),nMan:man.length};
+}
+function fatConfHTML(F){
+  const C=fatConferencia(F);if(!C.rows.length&&!C.nMan)return "";
+  const sit=(tot,lanc)=>{if(tot==null)return '<span class="muted">informe o total da fatura</span>';const d=r2(lanc-tot);return Math.abs(d)<0.01?'<b class="pos">✅ confere</b>':d<0?`<b class="neg">⚠️ faltam ${brl(-d)}</b>`:`<b class="neg">⚠️ ${brl(d)} a mais</b>`};
+  const conh=C.rows.filter(r=>r.total!=null),tTot=r2(conh.reduce((a,r)=>a+r.total,0)),tLan=r2(conh.reduce((a,r)=>a+r.lanc,0)),pend=C.rows.length-conh.length;
+  const ok=C.rows.every(r=>r.total!=null&&Math.abs(r.lanc-r.total)<0.01);
+  return `<section class="sheet"><div class="sheet-h"><h2>Conferência das faturas</h2><span class="small ${ok?"pos":"muted"}">${ok?"<b>✅ Todas as faturas conferem</b>":"total impresso na fatura × total lançado no sistema"}</span></div>
+  <div class="tw"><table class="conf"><thead><tr><th>Fatura</th><th class="r">Total da fatura</th><th class="r">Lançado</th><th class="r">Diferença</th><th>Situação</th></tr></thead><tbody>
+  ${C.rows.map(r=>`<tr><td><b>${esc(r.nome)}</b> <span class="small muted">${esc(r.det)}</span><br><span class="small muted">${esc(r.arq||"")} · ${r.n} lançamento(s)</span></td>
+    <td class="r">${r.auto?`<span class="num">${brl(r.total)}</span><br><span class="small muted">lido do PDF</span>`:`<input class="v" inputmode="decimal" data-tot="${r.tp}:${esc(r.id)}" value="${r.total!=null?nf.format(r.total):""}" placeholder="digite" aria-label="Total da fatura ${esc(r.nome)}"><br><span class="small muted">do app do banco</span>`}</td>
+    <td class="r num">${brl(r.lanc)}</td><td class="r num">${r.total!=null?brl(r2(r.lanc-r.total)):"—"}</td><td>${sit(r.total,r.lanc)}</td></tr>`).join("")}
+  ${C.nMan?`<tr><td><b>Lançamentos à mão</b><br><span class="small muted">${C.nMan} lançamento(s), fora da conferência</span></td><td class="r">—</td><td class="r num">${brl(C.man)}</td><td class="r">—</td><td class="small muted">não fazem parte de uma fatura</td></tr>`:""}
+  <tr style="border-top:2px solid var(--line)"><td><b>Total conferido</b>${pend?`<br><span class="small muted">${pend} fatura(s) sem o total informado</span>`:""}</td><td class="r num"><b>${brl(tTot)}</b></td><td class="r num"><b>${brl(tLan)}</b></td><td class="r num"><b>${brl(r2(tLan-tTot))}</b></td><td>${sit(conh.length?tTot:null,tLan)}</td></tr>
+  </tbody></table></div></section>`;
+}
+
 /* ---------- tela ---------- */
 let FAT_REV=null,FAT_FILTRO="";
 const fatMes=()=>mk();
@@ -989,6 +1019,7 @@ async function vFaturas(){
   const ordemTipos=Object.keys(grupos).sort((a,b)=>(a===""?-1:b===""?1:a.localeCompare(b,"pt-BR")));
   let html=`
   <p class="small" style="margin:0 0 10px">Faturas de ${meses}: <b>${brl(tot)}</b> em ${its.length} lançamentos · da família <b>${brl(tot-reemb)}</b> · de terceiros (a receber) <b>${brl(reemb)}</b>${semTipo?` · <span class="neg"><b>${semTipo} sem tipo</b></span>`:""}</p>
+  ${its.length?fatConfHTML(F):""}
   <section class="sheet"><div class="sheet-h"><h2>Importar faturas de ${meses}</h2><span class="small muted">Use o mês em que a fatura vence.</span></div>
     <div style="padding:14px 16px">
       <div class="row"><button class="btn primary" id="fImp">Escolher PDFs das faturas</button><input type="file" id="fImpF" accept="application/pdf,.pdf" multiple hidden>
@@ -1005,9 +1036,11 @@ async function vFaturas(){
         <div class="tw"><table class="fat"><colgroup><col style="width:66px"><col><col style="width:62px"><col style="width:170px"><col style="width:112px"><col style="width:190px"><col style="width:118px"><col style="width:54px"></colgroup><thead><tr><th>Data</th><th>Local</th><th class="r">Parcela</th><th>Tipo</th><th class="r">Valor</th><th>Observações</th><th>Cartão</th><th></th></tr></thead><tbody>
         ${g.map(it=>`<tr><td class="small">${esc(it.data)}</td><td>${esc(it.descricao)}</td><td class="r small">${it.parcela?`${it.parcela.n}/${it.parcela.t}`:""}</td>
           <td><select data-ft="${it.id}" style="width:100%" aria-label="Tipo de ${esc(it.descricao)}"><option value="">— escolha —</option>${c.tipos.map(t=>`<option ${it.tipo===t?"selected":""}>${esc(t)}</option>`).join("")}<option value="__novo">+ Novo tipo…</option></select></td>
-          <td class="r num">${brl(it.valor)}</td><td><input class="name" data-fo="${it.id}" value="${esc(it.obs||"")}" placeholder="—" aria-label="Observação"></td>
+          <td class="r"><input class="v ${it.valor<0?"neg":""}" inputmode="decimal" data-fv="${it.id}" value="${nf.format(it.valor)}" aria-label="Valor de ${esc(it.descricao)}" title="${it.valorOriginal!=null?"Na fatura: "+brl(it.valorOriginal):"Clique para ajustar"}">${it.valorOriginal!=null?`<div class="small muted">fatura: ${brl(it.valorOriginal)}</div>`:it.estorno?'<div class="small" style="color:var(--green)">estorno</div>':""}</td><td><input class="name" data-fo="${it.id}" value="${esc(it.obs||"")}" placeholder="—" aria-label="Observação"></td>
           <td class="small">${esc(it.cartao)}</td><td><button class="btn sm" data-fd="${it.id}" aria-label="Excluir lançamento">×</button></td></tr>`).join("")}
         </tbody></table></div></details>`}).join("")}
+      <div style="padding:12px 16px;border-top:1px solid var(--line)"><b>Adicionar lançamento à mão</b> <span class="small muted">(estorno ou ajuste que a fatura não trouxe; use sinal de menos para estorno, ex.: -59,90)</span>
+        <div class="row" style="margin-top:8px"><input type="text" id="fNovoData" placeholder="Data (dd/mm)" style="width:110px"><input type="text" id="fNovoDesc" placeholder="Descrição" style="flex:2;min-width:180px"><input class="v" inputmode="decimal" id="fNovoVal" placeholder="Valor"><select id="fNovoTipo" style="width:auto"><option value="">— tipo —</option>${c.tipos.map(t=>`<option>${esc(t)}</option>`).join("")}</select><input type="text" id="fNovoCart" list="fCartoes" placeholder="Cartão" style="width:130px"><datalist id="fCartoes">${cartoes.map(k=>`<option value="${esc(k)}">`).join("")}</datalist><button class="btn" id="fNovoAdd">Adicionar</button></div></div>
     </section>`;
     /* parcelas futuras */
     const fut={};its.filter(i=>i.parcela&&i.parcela.n<i.parcela.t).forEach(i=>{for(let k=1;k<=i.parcela.t-i.parcela.n;k++){const d=new Date(ANO,MES-1+k,1),key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;(fut[key]||={tot:0,reemb:0,n:0});fut[key].tot+=i.valor;fut[key].n++;if(fatEhReemb(i.tipo))fut[key].reemb+=i.valor}});
@@ -1036,40 +1069,65 @@ function ligarFaturas(m){
     save();fatSalvar(m);const y=scrollY;vGastos().then(()=>scrollTo(0,y));
   });
   $$("[data-fo]").forEach(inp=>inp.onchange=()=>{const it=byId(inp.dataset.fo);if(it){it.obs=inp.value.trim();fatSalvar(m)}});
+  $$("[data-tot]").forEach(inp=>inp.onchange=()=>{const [tp,...rest]=inp.dataset.tot.split(":"),id=rest.join(":"),v=inp.value.trim()===""?null:r2(parseBR(inp.value));
+    if(tp==="f"){const f=(F.faturas||[]).find(x=>x.id===id);if(f)f.totalManual=v}else{(F.totais||={})[id]=v}
+    fatSalvar(m);const y=scrollY;vGastos().then(()=>scrollTo(0,y))});
+  $$("[data-fv]").forEach(inp=>inp.onchange=()=>{const it=byId(inp.dataset.fv);if(!it)return;const v=r2(parseBR(inp.value));if(!isFinite(v)||v===0){inp.value=nf.format(it.valor);return}
+    if(it.valorOriginal==null&&!it.manual)it.valorOriginal=it.valor;if(it.valorOriginal===v)delete it.valorOriginal;it.valor=v;fatSalvar(m);const y=scrollY;vGastos().then(()=>scrollTo(0,y))});
+  $("#fNovoAdd")?.addEventListener("click",()=>{
+    const desc=$("#fNovoDesc").value.trim(),v=r2(parseBR($("#fNovoVal").value)),tipo=$("#fNovoTipo").value,cart=$("#fNovoCart").value.trim();
+    if(!desc||!v){alert("Informe a descrição e o valor (use sinal de menos para estorno, ex.: -59,90).");return}
+    F.itens.push({id:uid4(),data:$("#fNovoData").value.trim()||"",descricao:desc,parcela:null,valor:v,banco:"",titular:"",final:"",cartao:cart||"Manual",tipo,obs:"lançado à mão",manual:true,...(v<0?{estorno:true}:{})});
+    fatSalvar(m);toast("Lançamento adicionado");const y=scrollY;vGastos().then(()=>scrollTo(0,y));
+  });
   $$("[data-fd]").forEach(b=>b.onclick=()=>{const it=byId(b.dataset.fd);if(it&&confirm(`Excluir "${it.descricao}" (${brl(it.valor)})?`)){F.itens=F.itens.filter(i=>i!==it);fatSalvar(m);const y=scrollY;vGastos().then(()=>scrollTo(0,y))}});
   $("#fXls")?.addEventListener("click",()=>fatExcel(m));
   $("#fOrc")?.addEventListener("click",()=>fatParaOrcamento(m));
   fatConfigHTML();
 }
+/* total impresso na fatura, para a conferência */
+function fatTotalPdf(linhas){
+  const U=linhas.map(l=>String(l).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase());
+  const pats=[/SALDO DESTA FATURA[^\d-]*(-?[\d.]+,\d{2})/,/VALOR TOTAL DESTA FATURA[^\d-]*(-?[\d.]+,\d{2})/,/TOTAL DESTA FATURA[^\d-]*(-?[\d.]+,\d{2})/,/TOTAL DA FATURA(?! ANTERIOR)[^\d-]*(-?[\d.]+,\d{2})/,/TOTAL A PAGAR[^\d-]*(-?[\d.]+,\d{2})/,/VALOR DA FATURA[^\d-]*(-?[\d.]+,\d{2})/];
+  for(const re of pats)for(const l of U){const m=l.match(re);if(m){const v=FAT_VAL(m[1]);if(isFinite(v))return Math.round(v*100)/100}}
+  let soma=0,achou=false;U.forEach(l=>{const m=l.match(/^LANCAMENTOS NO CARTAO.*?(-?[\d.]+,\d{2})\s*$/);if(m){soma+=FAT_VAL(m[1]);achou=true}});
+  return achou?Math.round(soma*100)/100:null;
+}
+const FAT_BANCO_NOME={SANT:"Santander",BB:"Banco do Brasil",CAIXA:"Caixa",PORTO:"Porto"};
 async function fatImportar(m,arquivos,bancoForcado){
   const box=$("#fRev");box.innerHTML=`<p class="muted">Lendo ${arquivos.length} arquivo(s)…</p>`;
-  const F=FAT[m],novos=[],relat=[];
+  const F=FAT[m],novos=[],relat=[],faturasNovas=[],ligar=[];
   const chaveDup=i=>`${i.data}|${FAT_NORM(i.descricao)}|${i.valor.toFixed(2)}|${i.final}|${i.parcela?i.parcela.n+"/"+i.parcela.t:""}`;
-  const existentes=new Set(F.itens.map(chaveDup));
+  const jaTem={},porChave={};F.itens.forEach(i=>{const k=chaveDup(i);jaTem[k]=(jaTem[k]||0)+1;(porChave[k]||=[]).push(i)});
   for(const f of arquivos){
     let lido;try{lido=await fatLerArquivo(f)}catch(e){relat.push({nome:f.name,erro:e&&e.name==="PasswordException"?"senha não informada ou incorreta":"não foi possível abrir este PDF"});continue}
     if(!lido.nItens){relat.push({nome:f.name,erro:"este PDF não tem texto (foi salvo como imagem, por exemplo com “Imprimir como PDF”). Baixe a fatura original pelo app ou site do banco."});continue}
     const r=fatInterpretar(lido.linhas,bancoForcado);
     if(!r.itens.length){relat.push({nome:f.name,erro:"nenhum lançamento reconhecido",diag:lido.linhas});continue}
-    let dup=0;r.itens.forEach(it=>{const k=chaveDup(it);if(existentes.has(k)){dup++;return}existentes.add(k);
+    const totalPdf=fatTotalPdf(lido.linhas);
+    const existente=(F.faturas||[]).concat(faturasNovas).find(x=>x.banco===r.banco&&totalPdf!=null&&x.totalPdf===totalPdf);
+    const fid=existente?existente.id:uid4();
+    if(!existente)faturasNovas.push({id:fid,arquivo:f.name,banco:r.banco,cartoes:[...new Set(r.itens.map(i=>fatRotuloCartao(i.banco,i.final,i.titular)))],totalPdf,importadoEm:Date.now()});
+    let dup=0;const visto={};r.itens.forEach(it=>{const k=chaveDup(it);visto[k]=(visto[k]||0)+1;if(visto[k]<=(jaTem[k]||0)){dup++;const alvo=(porChave[k]||[]).find(x=>!x.fid&&!ligar.some(l=>l[0]===x));if(alvo)ligar.push([alvo,fid]);return}jaTem[k]=(jaTem[k]||0)+1;
       const {original,...base}=it;base.titular=String(it.titular||"").trim().split(/\s+/)[0]||"";
-      novos.push({...base,id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),cartao:fatRotuloCartao(it.banco,it.final,it.titular),tipo:fatTipoSugerido(it.descricao)||(/IOF|JUROS|MULTA|ENCARGO/.test(FAT_NORM(it.descricao))?"JUROS":""),obs:""})});
-    relat.push({nome:f.name,banco:r.banco,n:r.itens.length,dup,soma:r.itens.reduce((a,i)=>a+i.valor,0),ign:r.ignorados,diag:lido.linhas});
+      novos.push({...base,fid,id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),cartao:fatRotuloCartao(it.banco,it.final,it.titular),tipo:fatTipoSugerido(it.descricao.replace(/^(ESTORNO|CREDITO|CRÉDITO|CRED|DEVOLUCAO|DEVOLUÇÃO|CANCELAMENTO|REEMBOLSO)\s+(DE\s+)?/i,""))||(/IOF|JUROS|MULTA|ENCARGO/.test(FAT_NORM(it.descricao))?"JUROS":""),obs:""})});
+    const est=r.itens.filter(i=>i.valor<0);
+    relat.push({nome:f.name,banco:r.banco,n:r.itens.length,dup,soma:r.itens.reduce((a,i)=>a+i.valor,0),totalPdf,est:est.length,estV:est.reduce((a,i)=>a+i.valor,0),ign:r.ignorados,diag:lido.linhas});
   }
-  FAT_REV={m,novos,relat};fatRevisao();
+  FAT_REV={m,novos,relat,faturas:faturasNovas,ligar};fatRevisao();
 }
 function fatRevisao(){
   const {novos,relat}=FAT_REV,box=$("#fRev");
   const semTipo=novos.filter(i=>!i.tipo).length;
   box.innerHTML=`<div style="margin-top:14px">
     ${relat.map(r=>r.erro?`<div class="alert bad"><b>${esc(r.nome)}:</b> ${esc(r.erro)}${r.diag?` <button class="btn sm" data-diag="${esc(r.nome)}">Ver texto extraído (dados mascarados)</button>`:""}</div>`
-      :`<div class="alert ok"><b>${esc(r.nome)}</b> (${esc(r.banco||"banco não identificado")}): ${r.n} lançamentos, total ${brl(r.soma)}${r.dup?` · ${r.dup} já estavam no mês e foram ignorados`:""}${r.ign.length?` · ${r.ign.length} pagamento(s)/crédito(s) não contados`:""}. <button class="btn sm" data-diag="${esc(r.nome)}">Ver texto extraído</button></div>`).join("")}
+      :`<div class="alert ok"><b>${esc(r.nome)}</b> (${esc(r.banco||"banco não identificado")}): ${r.n} lançamentos, total ${brl(r.soma)}${r.est?` · inclui ${r.est} estorno(s)/crédito(s): ${brl(r.estV)}`:""}${r.totalPdf!=null?(Math.abs(r.totalPdf-r.soma)<0.01?` · <b>✅ confere com o total da fatura (${brl(r.totalPdf)})</b>`:` · <b class="neg">⚠️ total da fatura ${brl(r.totalPdf)}, diferença de ${brl(r.soma-r.totalPdf)}</b>`):" · total da fatura não encontrado no PDF (informe na conferência)"}${r.dup?` · ${r.dup} já estavam no mês e foram ignorados`:""}${r.ign.length?` · ${r.ign.length} pagamento(s) da fatura anterior não contados`:""}. <button class="btn sm" data-diag="${esc(r.nome)}">Ver texto extraído</button></div>`).join("")}
     ${novos.length?`<p><b>${novos.length} lançamentos novos</b>${semTipo?`, ${semTipo} sem tipo (você pode classificar depois)`:", todos classificados"}. Confira o total de cada arquivo com o valor da fatura.</p>
     <div class="row"><button class="btn primary" id="fConf">Adicionar ${novos.length} lançamentos a ${MESES[MES-1]}</button><button class="btn" id="fCanc">Cancelar</button></div>`:""}
     <pre id="fDiag" class="small" style="display:none;white-space:pre-wrap;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:10px;max-height:320px;overflow:auto;margin-top:10px"></pre></div>`;
   $$("[data-diag]").forEach(b=>b.onclick=()=>{const r=relat.find(x=>x.nome===b.dataset.diag),el=$("#fDiag");el.style.display="block";el.textContent=fatMascarar((r.diag||[]).join("\n"))+"\n\n(Se algum lançamento não foi lido, copie este texto e envie para ajuste. Nome completo e números de cartão/CPF já aparecem mascarados.)"});
   $("#fCanc")?.addEventListener("click",()=>{FAT_REV=null;box.innerHTML=""});
-  $("#fConf")?.addEventListener("click",()=>{const F=FAT[FAT_REV.m];F.itens=F.itens.concat(FAT_REV.novos);fatSalvar(FAT_REV.m);FAT_REV=null;toast("Lançamentos adicionados");vGastos()});
+  $("#fConf")?.addEventListener("click",()=>{const F=FAT[FAT_REV.m];F.itens=F.itens.concat(FAT_REV.novos);F.faturas=(F.faturas||[]).concat(FAT_REV.faturas||[]);(FAT_REV.ligar||[]).forEach(([it,fid])=>{it.fid=fid});fatSalvar(FAT_REV.m);FAT_REV=null;toast("Lançamentos adicionados");vGastos()});
 }
 /* ---------- envio ao orçamento (Real do mês), sem duplicar ---------- */
 function fatParaOrcamento(m){
@@ -1173,8 +1231,8 @@ function vBackup(){
 
 /* ---------- backup em Excel (com faturas) e PDF ---------- */
 let BACKUP_FAT=null;
-async function fatSalvarAgora(m){const {iv,ct}=await enc(KEY,{itens:FAT[m].itens});await fatRef(m).set({iv,ct,atualizado:firebase.firestore.FieldValue.serverTimestamp()})}
-async function restaurarFaturasBackup(){if(!BACKUP_FAT)return;for(const [m,itens] of Object.entries(BACKUP_FAT)){FAT[m]={itens};try{await fatSalvarAgora(m)}catch{}}BACKUP_FAT=null}
+async function fatSalvarAgora(m){const {iv,ct}=await enc(KEY,{itens:FAT[m].itens,faturas:FAT[m].faturas||[],totais:FAT[m].totais||{}});await fatRef(m).set({iv,ct,atualizado:firebase.firestore.FieldValue.serverTimestamp()})}
+async function restaurarFaturasBackup(){if(!BACKUP_FAT)return;for(const [m,v] of Object.entries(BACKUP_FAT)){FAT[m]=Array.isArray(v)?{itens:v}:{itens:v.itens||[],faturas:v.faturas||[],totais:v.totais||{}};try{await fatSalvarAgora(m)}catch{}}BACKUP_FAT=null}
 async function exportXlsx(){
   const meses=Array.from({length:12},(_,i)=>mk(ANO,i+1));await Promise.all(meses.map(fatCarregar));
   const res=[["Mês","Renda principal","Renda complementar","Contas fixas","Cartões (família)","Outros gastos","Planilha antiga","Total de gastos","Resultado","Retirado da reserva","Guardado","Saldo final"]];
@@ -1186,7 +1244,7 @@ async function exportXlsx(){
   const fix=[["Conta","Categoria","Valor padrão"],...S.fixas.map(f=>[f.nome,f.cat,f.valor])];
   const rsv=[["Mês","Movimento","Descrição","Valor"]];meses.forEach(m=>((S.mes[m]||{}).reserva||[]).forEach(x=>rsv.push([Nome(m),x.tipo==="resgate"?"Retirada":"Guardado",x.desc||"",x.valor])));
   const out=[["Mês","Descrição","Categoria","Valor"]];meses.forEach(m=>(S.mes[m]?.gastos||[]).filter(g=>g.origem!=="planilha").forEach(g=>out.push([Nome(m),g.desc,g.cat,g.valor])));
-  const fat={};Object.entries(FAT).forEach(([m,F])=>{if(F&&F.itens&&F.itens.length)fat[m]=F.itens});
+  const fat={};Object.entries(FAT).forEach(([m,F])=>{if(F&&F.itens&&F.itens.length)fat[m]={itens:F.itens,faturas:F.faturas||[],totais:F.totais||{}}});
   const json=JSON.stringify({versao:4,S:{...S,user:undefined},FAT:fat}),chunks=[["Backup do sistema. Não edite esta aba."]];for(let i=0;i<json.length;i+=30000)chunks.push([json.slice(i,i+30000)]);
   const wb=XLSX.utils.book_new(),fmt=ws=>{for(const r in ws)if(r[0]!=="!"&&typeof ws[r].v==="number")ws[r].z="#,##0.00";return ws};
   [["Resumo "+ANO,res,[14,15,13,15,13,14,14,12]],["Rendas",ren,[14,10,26,12,12,12,12]],["Cartões",car,[12,7,34,8,16,18,11,26,14]],["Contas fixas",fix,[30,20,12]],["Outros gastos",out,[12,34,20,11]],["Reserva",rsv,[14,12,30,12]]].forEach(([n,a,w])=>{const ws=fmt(XLSX.utils.aoa_to_sheet(a));ws["!cols"]=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,n)});
