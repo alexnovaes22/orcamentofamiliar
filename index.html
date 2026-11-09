@@ -155,6 +155,11 @@ details.hol{border-top:1px dashed var(--line);margin-top:8px}details.hol summary
 .alert.info{border-color:var(--blue);background:var(--sunk)}
 table.plan td,table.plan th{padding:6px 8px}table.plan input.v{width:110px}
 @media (max-width:640px){.catrow{grid-template-columns:12px 1fr 90px;}.catrow .bar,.catrow .small{display:none}.sum3{grid-template-columns:1fr}}
+tr.pago>td{background:rgba(47,122,74,.13)}tr.apagar>td{background:rgba(166,58,50,.10)}
+tr.pago>td:first-child{box-shadow:inset 5px 0 0 #2f7a4a}tr.apagar>td:first-child{box-shadow:inset 5px 0 0 #a63a32}
+label.sit{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;white-space:nowrap}label.sit input{width:18px;height:18px;cursor:pointer}
+tr.pago label.sit{color:#2f7a4a}tr.apagar label.sit{color:#a63a32}
+table.pag{width:100%}table.pag td,table.pag th{padding:8px 12px;vertical-align:middle}table.pag th{text-align:left}table.pag th.r{text-align:right}table.pag input.v{width:130px}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 18px;border-radius:999px;font-weight:600;z-index:50;font-size:.9rem}
 @media (max-width:640px){header.top{padding-left:12px;padding-right:12px}main{padding:14px 10px 80px}input.v{width:96px}td{padding:4px 8px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -706,6 +711,36 @@ async function holImportar(arquivos){
 
 /* ---------- GASTOS ---------- */
 let GSUB="cartoes";
+
+/* ---------- pagamento das faturas e situação das contas (pago / a pagar) ---------- */
+const FATURAS_PAGAR_PADRAO=[{id:"caixa",nome:"Fatura Caixa",banco:"CAIXA"},{id:"bb",nome:"Fatura BB",banco:"BB"},{id:"porto",nome:"Fatura Porto",banco:"PORTO"},{id:"santalex",nome:"Fatura Santander Alex",banco:"SANT",titular:"ALEX"},{id:"santrenata",nome:"Fatura Santander Renata",banco:"SANT",titular:"RENATA"}];
+const faturasPagar=()=>(S.cfg.faturasPagar||=FATURAS_PAGAR_PADRAO.map(f=>({...f})));
+function valorFatura(m,f){
+  const its=(FAT[m]?.itens||[]).filter(i=>{const b=i.banco||String(i.cartao||"").split(" ")[0];return b===f.banco&&(!f.titular||FAT_NORM((i.titular||"")+" "+(i.cartao||"")).includes(f.titular))});
+  return {valor:r2(its.reduce((a,i)=>a+i.valor,0)),n:its.length};
+}
+function situacaoPagamentos(m){
+  const M=S.mes[m]||{},P=M.faturasPag||{};let pago=0,apagar=0,nP=0,nA=0;
+  faturasPagar().forEach(f=>{const o=P[f.id]||{},calc=valorFatura(m,f),v=o.valor!=null?o.valor:calc.valor;if(!v&&!o.pago)return;o.pago?(pago+=v,nP++):(apagar+=v,nA++)});
+  if(!(M.hist&&!M.usarDetalhado))S.fixas.forEach(f=>{if(f.ativa===false)return;const o=(M.fixas||{})[f.id]||{},v=o.valor!=null?o.valor:f.valor;if(!v)return;o.pago?(pago+=v,nP++):(apagar+=v,nA++)});
+  return {pago:r2(pago),apagar:r2(apagar),nP,nA};
+}
+function blocoFaturasPagar(m){
+  const M=MM(m),P=M.faturasPag||{},SP=situacaoPagamentos(m);
+  return `<section class="sheet"><div class="sheet-h"><h2>Pagamento das faturas</h2><span class="small"><b class="pos">Pago ${brl(SP.pago)}</b> · <b class="neg">A pagar ${brl(SP.apagar)}</b> <span class="muted">(faturas + contas fixas)</span></span></div>
+  <div class="tw"><table class="pag"><thead><tr><th>Fatura</th><th class="r">Valor</th><th>Situação</th></tr></thead><tbody>
+  ${faturasPagar().map(f=>{const o=P[f.id]||{},c=valorFatura(m,f),v=o.valor!=null?o.valor:c.valor;
+    return `<tr class="${o.pago?"pago":"apagar"}"><td><b>${esc(f.nome)}</b><br><span class="small muted">${c.n?`${c.n} lançamento(s) importado(s)`:"fatura ainda não importada"}${o.valor!=null?" · valor digitado":""}</span></td>
+      <td class="r"><input class="v" inputmode="decimal" data-pfv="${f.id}" value="${v?nf.format(v):""}" placeholder="${c.valor?nf.format(c.valor):"valor"}" aria-label="Valor da ${esc(f.nome)}" title="Calculado pelos lançamentos; digite para ajustar"></td>
+      <td><label class="sit"><input type="checkbox" data-pfp="${f.id}" ${o.pago?"checked":""}> <span>${o.pago?"✓ Paga":"✗ A pagar"}</span></label></td></tr>`}).join("")}
+  </tbody></table></div></section>`;
+}
+function ligarFaturasPagar(m){
+  const M=MM(m),reg=()=>{save();const y=scrollY;vGastos().then(()=>scrollTo(0,y))};
+  $$("[data-pfp]").forEach(c=>c.onchange=()=>{const o=((M.faturasPag||={})[c.dataset.pfp]||={});o.pago=c.checked;reg()});
+  $$("[data-pfv]").forEach(i=>i.onchange=()=>{const f=faturasPagar().find(x=>x.id===i.dataset.pfv),o=((M.faturasPag||={})[f.id]||={}),calc=valorFatura(m,f).valor,v=i.value.trim()===""?null:r2(parseBR(i.value));o.valor=v!=null&&Math.abs(v-calc)<0.005?null:v;reg()});
+}
+
 async function vGastos(){
   const m=mk();await fatCarregar(m);if(VIEW!=="gastos"||m!==mk())return;
   const M=MM(m),G=gastosMes(m);
@@ -714,23 +749,25 @@ async function vGastos(){
      <div class="row" style="margin-top:6px"><button class="btn sm ${!M.usarDetalhado?"primary":""}" id="gPlan">Usar os totais da planilha</button><button class="btn sm ${M.usarDetalhado?"primary":""}" id="gDet">Usar faturas + contas fixas + outros</button></div></div>`:""}
   <div class="sum4"><div><div class="k">Total de gastos</div><div class="v">${brl0(G.total)}</div></div>
     ${M.hist&&!M.usarDetalhado?`<div><div class="k">Da planilha antiga</div><div class="v">${brl0(G.planilha)}</div></div>`:`<div><div class="k">Contas fixas</div><div class="v">${brl0(G.fixas)}</div></div><div><div class="k">Cartões (família)</div><div class="v">${brl0(G.cartao)}</div></div><div><div class="k">Outros gastos</div><div class="v">${brl0(G.outros)}</div></div>`}</div>
+  ${blocoFaturasPagar(m)}
   <div class="subtabs" role="group" aria-label="Tipo de gasto"><button data-g="cartoes" aria-pressed="${GSUB==="cartoes"}">Cartões</button><button data-g="fixas" aria-pressed="${GSUB==="fixas"}">Contas fixas</button><button data-g="outros" aria-pressed="${GSUB==="outros"}">Outros gastos</button>${M.hist?`<button data-g="planilha" aria-pressed="${GSUB==="planilha"}">Planilha antiga</button>`:""}</div>
   <div id="gsub"></div>`;
   $("#gPlan")?.addEventListener("click",()=>{M.usarDetalhado=false;save();vGastos()});
   $("#gDet")?.addEventListener("click",()=>{M.usarDetalhado=true;save();vGastos()});
   $$(".subtabs button").forEach(b=>b.onclick=()=>{GSUB=b.dataset.g;vGastos()});
+  ligarFaturasPagar(m);
   if(GSUB==="cartoes")vFaturas();else if(GSUB==="fixas")vFixas();else if(GSUB==="outros")vOutros();else vPlanilhaAntiga();
 }
 function vFixas(){
   const m=mk(),M=MM(m);
   $("#gsub").innerHTML=`<section class="sheet"><div class="sheet-h"><h2>Contas fixas de ${nomeMes(m)}</h2><span class="small muted">o valor vale só para este mês; para mudar sempre, edite o valor padrão</span></div>
-    <div class="tw"><table class="fat"><colgroup><col><col style="width:170px"><col style="width:130px"><col style="width:130px"><col style="width:80px"><col style="width:54px"></colgroup>
-    <thead><tr><th>Conta</th><th>Categoria</th><th class="r">Valor padrão</th><th class="r">Neste mês</th><th>Paga</th><th></th></tr></thead><tbody>
-    ${S.fixas.map(f=>{const o=(M.fixas||{})[f.id]||{};return `<tr style="${f.ativa===false?"opacity:.5":""}"><td><input class="name" data-fn="${f.id}" value="${esc(f.nome)}"></td>
+    <div class="tw"><table class="fat"><colgroup><col><col style="width:170px"><col style="width:130px"><col style="width:130px"><col style="width:120px"><col style="width:54px"></colgroup>
+    <thead><tr><th>Conta</th><th>Categoria</th><th class="r">Valor padrão</th><th class="r">Neste mês</th><th>Situação</th><th></th></tr></thead><tbody>
+    ${S.fixas.map(f=>{const o=(M.fixas||{})[f.id]||{};return `<tr class="${o.pago?"pago":"apagar"}" style="${f.ativa===false?"opacity:.5":""}"><td><input class="name" data-fn="${f.id}" value="${esc(f.nome)}"></td>
       <td><select data-fc="${f.id}" style="width:100%">${CATS.map(c=>`<option ${f.cat===c?"selected":""}>${c}</option>`).join("")}</select></td>
       <td class="r"><input class="v" inputmode="decimal" data-fv="${f.id}" value="${nf.format(f.valor)}"></td>
       <td class="r"><input class="v" inputmode="decimal" data-fm="${f.id}" value="${o.valor!=null?nf.format(o.valor):""}" placeholder="${nf.format(f.valor)}"></td>
-      <td><input type="checkbox" data-fp="${f.id}" ${o.pago?"checked":""} aria-label="Paga"></td>
+      <td><label class="sit"><input type="checkbox" data-fp="${f.id}" ${o.pago?"checked":""} aria-label="Paga"> <span>${o.pago?"✓ Paga":"✗ A pagar"}</span></label></td>
       <td><button class="btn sm" data-fx="${f.id}" aria-label="Remover conta">×</button></td></tr>`}).join("")}
     </tbody></table></div>
     <div class="row" style="padding:12px 16px"><input type="text" id="nfNome" placeholder="Nova conta (ex.: Internet)" style="flex:2;min-width:160px"><select id="nfCat" style="width:auto">${CATS.map(c=>`<option>${c}</option>`).join("")}</select><input class="v" inputmode="decimal" id="nfVal" placeholder="Valor"><button class="btn" id="nfAdd">Adicionar conta fixa</button></div></section>`;
@@ -739,7 +776,7 @@ function vFixas(){
   $$("[data-fc]").forEach(i=>i.onchange=()=>{def(i.dataset.fc).cat=i.value;reg()});
   $$("[data-fv]").forEach(i=>i.onchange=()=>{def(i.dataset.fv).valor=parseBR(i.value);reg()});
   $$("[data-fm]").forEach(i=>i.onchange=()=>{const o=((M.fixas||={})[i.dataset.fm]||={});o.valor=i.value.trim()===""?null:parseBR(i.value);reg()});
-  $$("[data-fp]").forEach(i=>i.onchange=()=>{const o=((M.fixas||={})[i.dataset.fp]||={});o.pago=i.checked;save()});
+  $$("[data-fp]").forEach(i=>i.onchange=()=>{const o=((M.fixas||={})[i.dataset.fp]||={});o.pago=i.checked;reg()});
   $$("[data-fx]").forEach(b=>b.onclick=()=>{const f=def(b.dataset.fx);if(confirm(`Remover "${f.nome}" das contas fixas? (os meses antigos não mudam)`)){S.fixas=S.fixas.filter(x=>x!==f);reg()}});
   $("#nfAdd").onclick=()=>{const n=$("#nfNome").value.trim(),v=parseBR($("#nfVal").value);if(!n)return;S.fixas.push({id:uid4(),nome:n,cat:$("#nfCat").value,valor:v});reg()};
 }
