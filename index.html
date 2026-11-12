@@ -163,6 +163,72 @@ table.pag{width:100%}table.pag td,table.pag th{padding:8px 12px;vertical-align:m
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 18px;border-radius:999px;font-weight:600;z-index:50;font-size:.9rem}
 @media (max-width:640px){header.top{padding-left:12px;padding-right:12px}main{padding:14px 10px 80px}input.v{width:96px}td{padding:4px 8px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ================= visual de sistema online ================= */
+:root{--paper:#F1F4F8;--side:#13304F;--side2:#1D426A;--shadow:0 1px 2px rgba(16,24,40,.05),0 6px 18px rgba(16,24,40,.06)}
+@media (prefers-color-scheme:dark){:root{--paper:#0E1317;--side:#0A1826;--side2:#163250;--shadow:0 1px 2px rgba(0,0,0,.45)}}
+#app.shell{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;background:var(--side);color:#E6EEF6;display:flex;flex-direction:column;padding:18px 12px;padding-top:calc(18px + env(safe-area-inset-top,0px))}
+.side .brand{display:flex;align-items:center;gap:11px;padding:4px 8px 22px;color:#fff;font-family:var(--font-num);font-weight:700;font-size:1rem;line-height:1.15}
+.side .brand small{font-weight:500;opacity:.7;font-size:.8rem}
+.side .logo{display:grid;place-items:center;width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#3D7A4F,#2C5A86);font-size:.88rem;letter-spacing:-.02em}
+.side .tabs{display:flex;flex-direction:column;gap:4px}
+.side .tabs button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:#C4D2E1;font-weight:600;cursor:pointer;width:100%}
+.side .tabs button svg{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.side .tabs button:hover{background:var(--side2);color:#fff}
+.side .tabs button[aria-pressed=true]{background:#fff;color:var(--side)}
+.side .tabs button:focus-visible{outline:3px solid #8EC5FF;outline-offset:2px}
+.side-foot{margin-top:auto;font-size:.76rem;opacity:.7;padding:10px 8px;line-height:1.35}
+.main{min-width:0;display:flex;flex-direction:column}
+header.top{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);padding:14px 28px 8px;padding-top:calc(14px + env(safe-area-inset-top,0px));box-shadow:0 1px 0 rgba(16,24,40,.03)}
+.top-row h1{font-size:1.3rem}
+.months{margin-top:10px}
+.months button{border-radius:999px}
+main#view{width:100%;max-width:1180px;margin:0 auto;padding:22px 28px 60px}
+.lembrete{max-width:1180px;margin:14px auto 0;padding:0 28px}
+.panel,.sheet,.mcard{border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);background:var(--surface)}
+@media (prefers-color-scheme:light){.panel,.sheet,.mcard{border-color:transparent}}
+.sheet{overflow:hidden;margin-bottom:18px}
+.panel{margin-bottom:18px}
+.sum3,.sum4{background:transparent!important;border:0!important;gap:14px!important;overflow:visible!important}
+.sum3>div,.sum4>div{border-radius:14px;box-shadow:var(--shadow);padding:16px 18px 16px 22px;position:relative;background:var(--surface)}
+.sum3>div::before,.sum4>div::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:4px;border-radius:0 4px 4px 0;background:var(--blue)}
+.sum3>div:nth-child(2)::before,.sum4>div:nth-child(2)::before{background:var(--green)}
+.sum3>div:nth-child(3)::before,.sum4>div:nth-child(3)::before{background:var(--ochre)}
+.sum4>div:nth-child(4)::before{background:var(--violet)}
+.sum3 .v,.sum4 .v{font-size:1.4rem}
+.mcard.clic{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}.mcard.clic:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(16,24,40,.10)}
+.mcard.clic:focus-visible{outline:3px solid var(--blue)}
+table thead th{background:var(--sunk);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700}
+.sheet-h{padding:14px 18px}
+.subtabs button{background:var(--surface);box-shadow:var(--shadow);border-color:transparent}
+.btn{border-radius:8px}.btn.primary{box-shadow:0 1px 2px rgba(16,24,40,.15)}
+tr.mesrow{cursor:pointer}tr.mesrow:hover>td{background:var(--sunk)}tr.mesrow.aberto>td{background:var(--sunk);border-bottom:0}
+tr.detrow>td{background:var(--sunk);padding:4px 10px 16px!important}
+.det{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.det-b{background:var(--surface);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
+.det-h{display:flex;justify-content:space-between;gap:8px;font-weight:700;margin-bottom:6px}.det-h b{white-space:nowrap}
+.det-l{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.det-cat summary{display:flex;justify-content:space-between;gap:8px;cursor:pointer;padding:4px 0;font-weight:600}
+.det-res{grid-column:1/-1;text-align:right;font-size:1.02rem;padding:6px 4px}
+tr.previsto>td{color:var(--muted);font-style:italic}
+.sim{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.sim.off{opacity:.5}
+.sim input[type=checkbox]{width:18px;height:18px}
+.simform{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.simform>*{flex:1 1 150px}.simform #sNome{flex:3 1 240px}.simform input.v{width:auto}
+@media (max-width:860px){
+  #app.shell{grid-template-columns:1fr}
+  .side{position:fixed;inset:auto 0 0 0;height:auto;flex-direction:row;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:40;box-shadow:0 -2px 12px rgba(0,0,0,.18)}
+  .side .brand,.side-foot{display:none}
+  .side .tabs{flex-direction:row;width:100%;gap:2px}
+  .side .tabs button{flex:1;flex-direction:column;gap:3px;padding:7px 2px;font-size:.66rem;justify-content:center;text-align:center}
+  .side .tabs button svg{width:22px;height:22px}
+  main#view{padding:14px 12px 100px}
+  header.top{padding:10px 14px 6px;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  .top-row h1{font-size:1.1rem}
+  .lembrete{padding:0 12px}
+  table.pag td,table.pag th{padding:8px 8px}table.pag input.v{width:88px}label.sit{white-space:normal;gap:4px}label.sit span{font-size:.82rem}
+  table.pag td:first-child .small{display:block}
+}
 </style>
 </head>
 <body>
@@ -205,19 +271,22 @@ table.pag{width:100%}table.pag td,table.pag th{padding:8px 12px;vertical-align:m
 </section>
 
 <!-- ============ APP ============ -->
-<div id="app" class="hidden">
+<div id="app" class="hidden shell">
+  <aside class="side" aria-label="Menu principal">
+    <div class="brand"><span class="logo" aria-hidden="true">R$</span><span>Orçamento<br><small>da Família</small></span></div>
+    <nav class="tabs" role="group" aria-label="Telas">
+      <button data-v="inicio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg><span>Início</span></button>
+      <button data-v="rendas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg><span>Rendas</span></button>
+      <button data-v="gastos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/></svg><span>Gastos</span></button>
+      <button data-v="plano"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M8 2.5v4M16 2.5v4M3 10h18M7.5 14h3M13.5 14h3M7.5 17.5h3"/></svg><span>Planejamento</span></button>
+      <button data-v="backup"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg><span>Backup</span></button>
+    </nav>
+    <div class="side-foot">🔒 Dados criptografados no seu navegador</div>
+  </aside>
+  <div class="main">
   <header class="top">
     <div class="top-row">
-      <div class="row" style="align-items:center;gap:16px">
-        <span class="brand">Orçamento da Família</span>
-        <div class="tabs" role="group" aria-label="Telas">
-          <button data-v="inicio">Início</button>
-          <button data-v="rendas">Rendas</button>
-          <button data-v="gastos">Gastos</button>
-          <button data-v="plano">Planejamento</button>
-          <button data-v="backup">Backup</button>
-        </div>
-      </div>
+      <div><h1 id="pgTitle">Início</h1><div class="small muted" id="pgSub"></div></div>
       <div class="row" style="align-items:center">
         <span id="sync" class="sync" role="status" aria-live="polite"></span>
         <button class="btn sm" id="b-lock">Sair</button>
@@ -230,6 +299,7 @@ table.pag{width:100%}table.pag td,table.pag th{padding:8px 12px;vertical-align:m
   </header>
   <div id="lembrete" class="lembrete hidden" role="status"></div>
   <main id="view" tabindex="-1"></main>
+  </div>
 </div>
 
 <script>
@@ -506,7 +576,7 @@ function gastosMes(m){
 const mesTemDados=m=>{const M=S.mes[m];return !!(M&&((M.rendas||[]).length||(M.gastos||[]).length||M.renata||(M.outras||[]).length))||!!(FAT[m]&&FAT[m].itens&&FAT[m].itens.length)};
 
 /* ---------- previsões ---------- */
-function ultimoComFatura(ate){let m=ate;for(let k=0;k<6;k++){if(FAT[m]&&FAT[m].itens&&FAT[m].itens.length)return m;m=addMes(m,-1)}return null}
+function ultimoComFatura(ate){let m=ate;for(let k=0;k<24;k++){if(FAT[m]&&FAT[m].itens&&FAT[m].itens.length)return m;m=addMes(m,-1)}return null}
 function parcelasPrevistas(f){
   const base=ultimoComFatura(addMes(f,-1));if(!base)return 0;let dist=0,m=base;while(m<f){m=addMes(m,1);dist++}
   return r2((FAT[base].itens||[]).filter(i=>i.parcela&&!fatEhReemb(i.tipo)&&i.parcela.t-i.parcela.n>=dist).reduce((a,i)=>a+i.valor,0));
@@ -550,15 +620,40 @@ function previsao(f){
   const est=R.itens.filter(i=>i.est);if(est.length)motivos.push(`renda ainda estimada: ${est.map(i=>i.nome).join(", ")}`);
   if(est.some(i=>i.manual)){const man=est.filter(i=>i.manual);man.forEach(i=>{});}
   if(!med.detalhado&&!meta)motivos.push("gastos do dia a dia estimados pela planilha antiga (fica mais preciso com 3 meses de faturas importadas)");
-  return {f,R,fix,par,variavel,med,meta,saidas,saldo,aval,motivos};
+  const sim=simMes(f);
+  return {f,R,fix,par,variavel,med,meta,saidas:r2(saidas+sim.desp),saldo:r2(saldo+sim.rec-sim.desp),aval,motivos,sim,saldoSemSim:saldo};
+}
+/* ---------- parcelas de cartão previstas, com detalhe ---------- */
+function parcelasDetalhe(f){
+  const base=ultimoComFatura(addMes(f,-1));if(!base)return {base:null,itens:[]};
+  let dist=0,m=base;while(m<f){m=addMes(m,1);dist++}
+  const itens=(FAT[base].itens||[]).filter(i=>i.parcela&&i.parcela.t-i.parcela.n>=dist&&dist>0).map(i=>({descricao:i.descricao,tipo:i.tipo||"",reemb:fatEhReemb(i.tipo),cat:fatEhReemb(i.tipo)?"Terceiros (a receber)":(i.tipo?fatCat(i.tipo):"Outros"),n:i.parcela.n+dist,t:i.parcela.t,valor:i.valor,cartao:i.cartao,fim:addMes(base,i.parcela.t-i.parcela.n)}));
+  return {base,itens};
+}
+function parcelamentosAtivos(){
+  const base=ultimoComFatura(NOW)||ultimoComFatura(addMes(NOW,1));if(!base)return {base:null,itens:[]};
+  const itens=(FAT[base].itens||[]).filter(i=>i.parcela&&i.parcela.t>i.parcela.n).map(i=>({descricao:i.descricao,tipo:i.tipo||"",reemb:fatEhReemb(i.tipo),cat:fatEhReemb(i.tipo)?"Terceiros (a receber)":(i.tipo?fatCat(i.tipo):"Outros"),n:i.parcela.n,t:i.parcela.t,valor:i.valor,cartao:i.cartao,restam:i.parcela.t-i.parcela.n,fim:addMes(base,i.parcela.t-i.parcela.n)}));
+  return {base,itens};
+}
+/* ---------- simulações (não mexem nos dados reais) ---------- */
+const sims=()=>(S.sims||=[]);
+const simsLigadas=()=>S.cfg.simOn!==false;
+function simMes(f){
+  const r={rec:0,desp:0,itens:[]};if(!simsLigadas())return r;
+  sims().forEach(x=>{if(!x.ativa)return;let vale=false;
+    if(x.rec==="unica")vale=f===x.inicio;else{let fim=x.meses>0?addMes(x.inicio,x.meses-1):"9999-12";vale=f>=x.inicio&&f<=fim}
+    if(!vale)return;const v=Number(x.valor)||0;x.tipo==="receita"?r.rec+=v:r.desp+=v;r.itens.push({nome:x.nome,valor:v,tipo:x.tipo})});
+  r.rec=r2(r.rec);r.desp=r2(r.desp);return r;
 }
 
 /* ---------- topo e navegação ---------- */
 $$(".tabs button").forEach(b=>b.onclick=()=>{VIEW=b.dataset.v;render()});
 $("#y-prev").onclick=()=>{ANO--;render()};
 $("#y-next").onclick=()=>{ANO++;render()};
+const TITULOS={inicio:["Visão geral","como está e como vai ficar"],rendas:["Rendas","holerites, renda complementar e reserva"],gastos:["Gastos","faturas, contas fixas e outros gastos"],plano:["Planejamento","próximos 12 meses, parcelamentos e simulações"],backup:["Backup e conta","guarde uma cópia dos seus dados"]};
 function topo(){
   $$(".tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===VIEW));
+  {const t=TITULOS[VIEW]||["",""];$("#pgTitle").textContent=t[0]+((VIEW==="rendas"||VIEW==="gastos")?` · ${Nome(mk())}`:"");$("#pgSub").textContent=t[1];document.title=t[0]+" · Orçamento da Família"}
   $("#y-lbl").textContent=ANO;
   $("#m-btns").innerHTML=MABR.map((n,i)=>{const m=mk(ANO,i+1);return `<button data-mi="${i+1}" class="${mesTemDados(m)?"real":""}" aria-pressed="${i+1===MES}" title="${MESES[i]}">${n}</button>`}).join("");
   $("#m-btns button[aria-pressed=true]")?.scrollIntoView({inline:"center",block:"nearest"});
@@ -613,17 +708,20 @@ function vInicio(){
     <p class="small muted" style="margin-top:6px">${G.reemb?`Gastos de terceiros (${brl0(G.reemb)}) ficam fora. `:""}Reserva hoje: <b>${brl0(reservaSaldo())}</b>.</p>
   </section>
   <h2 style="margin:4px 0 10px">Próximos meses</h2>
-  <div class="cards3">${prox.map(p=>`<div class="mcard" style="border-top:5px solid ${corSaldo(p.saldo)}">
+  <div class="cards3">${prox.map(p=>`<div class="mcard clic" role="button" tabindex="0" data-irplano="${p.f}" title="Ver o detalhamento de ${Nome(p.f)}" style="border-top:5px solid ${corSaldo(p.saldo)}">
       <div class="small muted">${Nome(p.f)}</div>
       <div class="v" style="color:${corSaldo(p.saldo)}">${p.saldo>=0?"Sobra":"Falta"} ${brl0(Math.abs(p.saldo))}</div>
       <div class="small">Entra ${brl0(p.R.total)} · sai ${brl0(p.saidas)}</div>
       <div class="small" style="margin-top:6px"><span class="pill ${p.aval==="Otimista"?"warn":p.aval==="Conservadora"?"ok":""}">Previsão ${p.aval.toLowerCase()}</span></div>
       ${p.motivos.length?`<div class="small muted" style="margin-top:6px">${esc(p.motivos[0])}</div>`:""}
+      ${p.sim.itens.length?'<div class="small" style="margin-top:6px"><span class="pill warn">inclui simulações</span></div>':""}
+      <div class="small" style="margin-top:8px;color:var(--blue);font-weight:700">Ver de onde vem →</div>
     </div>`).join("")}</div>
   ${alertas.length?`<section class="panel"><h2 style="margin-bottom:10px">Atenção</h2>${alertas.map(a=>`<div class="alert ${a.n==="bad"?"bad":a.n==="info"?"info":""}"><b>${esc(a.t)}</b><br><span class="small">${esc(a.d)}</span></div>`).join("")}</section>`:`<section class="panel"><div class="alert ok"><b>Tudo em ordem.</b> Nenhum alerta para os próximos meses.</div></section>`}
   <section class="panel"><div class="panel-h"><h2>Para onde foi o dinheiro em ${nomeMes(ref)}</h2><span class="small muted">comparado com a média dos 3 meses anteriores</span></div>
     ${cats.length?cats.map(([c,v])=>{const md=medCat[c],dif=md?Math.round((v/md-1)*100):null,pr=(R.principal||R.liquido)?v/(R.principal||R.liquido):0;return `<div class="catrow"><span class="dot" style="background:${CAT_COR[c]||"#999"}"></span><span class="nm">${esc(c)}</span><span class="bar"><span style="width:${Math.min(100,pr*100)}%;background:${CAT_COR[c]||"#999"}"></span></span><span class="num r">${brl0(v)}</span><span class="small muted r">${Math.round(pr*100)}% da renda principal</span><span class="small r" style="color:${dif>15?"var(--red)":dif<-15?"var(--green)":"var(--muted)"}">${dif==null?"":(dif>0?"+":"")+dif+"%"}</span></div>`}).join(""):'<p class="muted">Importe as faturas e lance os gastos para ver o diagnóstico.</p>'}
   </section>`;
+  $$("[data-irplano]").forEach(c=>{const ir=()=>{PLANO_ABERTO=c.dataset.irplano;VIEW="plano";render();setTimeout(()=>document.querySelector(".mesrow.aberto")?.scrollIntoView({block:"center"}),50)};c.onclick=ir;c.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();ir()}}});
 }
 
 /* ---------- RENDAS ---------- */
@@ -796,21 +894,69 @@ function vPlanilhaAntiga(){
 }
 
 /* ---------- PLANEJAMENTO ---------- */
+let PLANO_ABERTO=null;
+function detalheMes(p){
+  const pd=parcelasDetalhe(p.f),porCat={};pd.itens.filter(i=>!i.reemb).forEach(i=>{(porCat[i.cat]||=[]).push(i)});
+  const M=S.mes[p.f]||{};
+  const fixas=S.fixas.filter(f=>f.ativa!==false).map(f=>{const o=(M.fixas||{})[f.id];return {nome:f.nome,valor:o&&o.valor!=null?o.valor:f.valor}}).filter(x=>x.valor);
+  const bloco=(tit,total,cor,linhas)=>`<div class="det-b"><div class="det-h"><span>${tit}</span><b class="num" style="color:${cor}">${brl(total)}</b></div>${linhas||'<div class="small muted">—</div>'}</div>`;
+  const L=(n,v,extra="")=>`<div class="det-l"><span>${n}${extra}</span><span class="num">${brl(v)}</span></div>`;
+  return `<div class="det">
+    ${bloco("Entradas",p.R.total+p.sim.rec,"var(--green)",p.R.itens.map(i=>L(i.nome,i.valor,i.est?' <span class="pill">estimado</span>':i.comp?' <span class="pill">complementar</span>':"")).join("")+p.sim.itens.filter(i=>i.tipo==="receita").map(i=>L(i.nome,i.valor,' <span class="pill warn">simulação</span>')).join(""))}
+    ${bloco("Contas fixas",p.fix,"var(--red)",fixas.map(x=>L(x.nome,x.valor)).join(""))}
+    ${bloco("Parcelas de cartão já assumidas",p.par,"var(--red)",Object.entries(porCat).sort((a,b)=>b[1].reduce((s,i)=>s+i.valor,0)-a[1].reduce((s,i)=>s+i.valor,0)).map(([c,its])=>`<details class="det-cat"><summary><span>${esc(c)} <span class="small muted">(${its.length})</span></span><span class="num">${brl(its.reduce((s,i)=>s+i.valor,0))}</span></summary>${its.map(i=>`<div class="det-l small"><span>${esc(i.descricao)} <span class="muted">${i.n}/${i.t} · ${esc(i.cartao)}</span></span><span class="num">${brl(i.valor)}</span></div>`).join("")}</details>`).join(""))}
+    ${bloco("Gastos do dia a dia (estimativa)",p.variavel,"var(--red)",`<div class="small muted">${p.meta!=null&&p.meta!==""?"meta definida por você":esc(p.med.base)}</div>`)}
+    ${p.sim.itens.some(i=>i.tipo==="despesa")?bloco("Despesas simuladas",p.sim.desp,"var(--red)",p.sim.itens.filter(i=>i.tipo==="despesa").map(i=>L(i.nome,i.valor,' <span class="pill warn">simulação</span>')).join("")):""}
+    <div class="det-res">Entradas ${brl(p.R.total+p.sim.rec)} − saídas ${brl(p.saidas)} = <b style="color:${corSaldo(p.saldo)}">${p.saldo>=0?"sobra":"falta"} ${brl(Math.abs(p.saldo))}</b></div></div>`;
+}
 function vPlano(){
   const meses=Array.from({length:12},(_,k)=>addMes(NOW,k+1)),ps=meses.map(previsao);let acc=0;
-  $("#view").innerHTML=`<section class="panel"><div class="panel-h"><h2>Próximos 12 meses</h2><span class="small muted">calculado sozinho; ajuste a meta de gastos do dia a dia se quiser</span></div>
-    <p class="small muted" style="margin-top:-4px"><b>Como é calculado:</b> rendas (último holerite de cada vínculo, Renda Renata média, outras rendas que se repetem, 13º e férias informados) − contas fixas − parcelas de cartão já assumidas − gastos do dia a dia (média dos últimos meses ou a sua meta).</p>
-    <div class="tw"><table class="plan"><thead><tr><th>Mês</th><th class="r">Renda principal</th><th class="r">Complementar</th><th class="r">Contas fixas</th><th class="r">Parcelas cartão</th><th class="r">Dia a dia</th><th class="r">Saldo</th><th class="r">Acumulado</th><th>Previsão</th></tr></thead><tbody>
-    ${ps.map(p=>{acc=r2(acc+p.saldo);return `<tr><td><b>${Nome(p.f)}</b></td><td class="r num" title="${esc(p.R.itens.filter(i=>!i.comp).map(i=>`${i.nome}: ${brl(i.valor)}${i.est?" (estimado)":""}`).join("\n"))}">${brl0(p.R.principal)}${p.R.itens.some(i=>i.est&&!i.comp)?' <span class="small muted">*</span>':""}</td><td class="r num" title="${esc(p.R.itens.filter(i=>i.comp).map(i=>`${i.nome}: ${brl(i.valor)}${i.ate?" até "+nomeMes(i.ate):""}`).join("\n"))}">${p.R.complementar?brl0(p.R.complementar):"—"}</td><td class="r num">${brl0(p.fix)}</td><td class="r num">${brl0(p.par)}</td>
-      <td class="r"><input class="v" inputmode="decimal" data-meta="${p.f}" value="${p.meta!=null&&p.meta!==""?nf.format(p.meta):""}" placeholder="${nf.format(p.med.valor)}" title="Deixe em branco para usar a média (${brl(p.med.valor)})"></td>
+  const temSim=sims().some(x=>x.ativa)&&simsLigadas();
+  /* compromissos por categoria */
+  const PA=parcelamentosAtivos(),cats={};PA.itens.forEach(i=>{(cats[i.cat]||=[]).push(i)});
+  const mesesC=meses.slice(0,8);
+  const linhaCat=(c,its)=>{const vals=mesesC.map(f=>its.filter(i=>i.fim>=f).reduce((s,i)=>s+i.valor,0));const fim=its.reduce((m,i)=>i.fim>m?i.fim:m,"");return `<tr><td><b>${esc(c)}</b> <span class="small muted">${its.length} parcelamento(s)</span></td>${vals.map(v=>`<td class="r num ${v?"":"muted"}">${v?brl0(v):"—"}</td>`).join("")}<td><span class="pill ok">livre em ${esc(nomeMes(addMes(fim,1)))}</span></td></tr>`};
+  $("#view").innerHTML=`
+  <section class="panel"><div class="panel-h"><h2>Próximos 12 meses</h2><span class="small muted">clique em um mês para ver de onde vem cada valor</span></div>
+    ${temSim?'<div class="alert"><b>Simulações ativas</b> estão incluídas nos valores abaixo. Desligue em “Simulações” para ver só o real.</div>':""}
+    <div class="tw"><table class="plan"><thead><tr><th>Mês</th><th class="r">Entradas</th><th class="r">Contas fixas</th><th class="r">Parcelas cartão</th><th class="r">Dia a dia</th>${temSim?'<th class="r">Simulações</th>':""}<th class="r">Saldo</th><th class="r">Acumulado</th><th>Previsão</th></tr></thead><tbody>
+    ${ps.map(p=>{acc=r2(acc+p.saldo);const ab=PLANO_ABERTO===p.f;return `<tr class="mesrow ${ab?"aberto":""}" data-abre="${p.f}" tabindex="0" role="button" aria-expanded="${ab}"><td><b>${ab?"▾":"▸"} ${Nome(p.f)}</b></td><td class="r num">${brl0(p.R.total)}${p.R.itens.some(i=>i.est)?' <span class="small muted">*</span>':""}</td><td class="r num">${brl0(p.fix)}</td><td class="r num">${brl0(p.par)}</td>
+      <td class="r"><input class="v" inputmode="decimal" data-meta="${p.f}" value="${p.meta!=null&&p.meta!==""?nf.format(p.meta):""}" placeholder="${nf.format(p.med.valor)}" title="Meta de gastos do dia a dia. Em branco usa a média (${brl(p.med.valor)})"></td>
+      ${temSim?`<td class="r num">${p.sim.rec||p.sim.desp?(p.sim.rec?"+"+brl0(p.sim.rec):"")+(p.sim.desp?" −"+brl0(p.sim.desp):""):"—"}</td>`:""}
       <td class="r num" style="color:${corSaldo(p.saldo)}"><b>${brl0(p.saldo)}</b></td><td class="r num" style="color:${acc<0?"var(--red)":"inherit"}">${brl0(acc)}</td>
-      <td><span class="pill ${p.aval==="Otimista"?"warn":p.aval==="Conservadora"?"ok":""}" title="${esc(p.motivos.join(" · "))}">${p.aval}</span></td></tr>`}).join("")}
-    </tbody></table></div><p class="small muted">* inclui renda estimada (sem holerite). Passe o mouse sobre os valores para ver os detalhes. A reserva não entra no cálculo.</p>
+      <td><span class="pill ${p.aval==="Otimista"?"warn":p.aval==="Conservadora"?"ok":""}" title="${esc(p.motivos.join(" · "))}">${p.aval}</span></td></tr>
+      ${ab?`<tr class="detrow"><td colspan="${temSim?9:8}">${detalheMes(p)}</td></tr>`:""}`}).join("")}
+    </tbody></table></div><p class="small muted">* inclui renda estimada (sem holerite). A reserva não entra no cálculo.</p>
     ${(()=>{let a=0,pior=0;ps.forEach(p=>{a+=p.saldo;pior=Math.min(pior,a)});const rs=reservaSaldo();return pior<0?`<div class="alert ${rs>=-pior?"":"bad"}"><b>O acumulado chega a ${brl0(pior)}.</b> ${rs>=-pior?`A sua reserva (${brl0(rs)}) cobre esse período, mas ela seria consumida.`:`A reserva estimada (${brl0(rs)}) não cobre: é preciso cortar gastos ou aumentar a renda.`}</div>`:`<div class="alert ok"><b>Sem meses negativos no acumulado.</b> Reserva estimada: ${brl0(rs)}.</div>`})()}</section>
-    <section class="panel"><h2 style="margin-bottom:8px">Entradas e saídas previstas</h2><div style="position:relative;height:280px"><canvas id="cPlano" aria-label="Gráfico de rendas e gastos previstos"></canvas></div></section>`;
-  $$("[data-meta]").forEach(i=>i.onchange=()=>{const M=MM(i.dataset.meta);M.meta=i.value.trim()===""?null:parseBR(i.value);save();vPlano()});
+
+  <section class="panel"><div class="panel-h"><h2>Parcelamentos por categoria</h2><span class="small muted">${PA.base?`a partir da fatura de ${nomeMes(PA.base)}`:"importe as faturas para ver"}</span></div>
+    ${PA.itens.length?`<p class="small muted" style="margin-top:-4px">Quanto cada categoria já tem comprometido por mês e quando ela fica livre para uma nova compra parcelada.</p>
+    <div class="tw"><table class="plan"><thead><tr><th>Categoria</th>${mesesC.map(f=>`<th class="r">${MABR[+f.split("-")[1]-1]}</th>`).join("")}<th>Livre</th></tr></thead><tbody>
+    ${Object.entries(cats).sort((a,b)=>b[1].reduce((s,i)=>s+i.valor,0)-a[1].reduce((s,i)=>s+i.valor,0)).map(([c,its])=>linhaCat(c,its)).join("")}</tbody></table></div>
+    <details style="margin-top:10px"><summary class="small" style="cursor:pointer;font-weight:700">Ver cada parcelamento (${PA.itens.length})</summary>
+      <div class="tw"><table class="plan"><thead><tr><th>Compra</th><th>Categoria</th><th class="r">Parcela</th><th class="r">Valor/mês</th><th class="r">Restam</th><th>Última parcela</th></tr></thead><tbody>
+      ${PA.itens.sort((a,b)=>a.fim.localeCompare(b.fim)).map(i=>`<tr><td>${esc(i.descricao)} <span class="small muted">${esc(i.cartao)}</span></td><td class="small">${esc(i.cat)}</td><td class="r small">${i.n}/${i.t}</td><td class="r num">${brl(i.valor)}</td><td class="r">${i.restam}</td><td>${esc(Nome(i.fim))}</td></tr>`).join("")}
+      </tbody></table></div></details>`:'<p class="muted">Nenhuma compra parcelada em andamento nas faturas importadas.</p>'}</section>
+
+  <section class="panel"><div class="panel-h"><h2>Simulações</h2><label class="small" style="display:flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" id="simOn" ${simsLigadas()?"checked":""}> Incluir no planejamento</label></div>
+    <p class="small muted" style="margin-top:-4px">Teste cenários sem mexer nos dados reais: um salário novo, uma renda extra, a rescisão, uma compra parcelada que você está pensando em fazer…</p>
+    ${sims().map(x=>`<div class="sim ${x.ativa?"":"off"}"><label><input type="checkbox" data-simon="${x.id}" ${x.ativa?"checked":""} aria-label="Ativar ${esc(x.nome)}"></label>
+      <span><b>${esc(x.nome)}</b><br><span class="small muted">${x.tipo==="receita"?"Receita":"Despesa"} de ${brl(x.valor)} · ${x.rec==="unica"?`só em ${nomeMes(x.inicio)}`:`todo mês a partir de ${nomeMes(x.inicio)}${x.meses>0?` por ${x.meses} mês(es)`:", sem prazo"}`}</span></span>
+      <span class="num ${x.tipo==="receita"?"pos":"neg"}">${x.tipo==="receita"?"+":"−"}${brl0(x.valor)}</span><button class="btn sm" data-simdel="${x.id}" aria-label="Excluir ${esc(x.nome)}">×</button></div>`).join("")||'<p class="small muted">Nenhuma simulação ainda.</p>'}
+    <div class="simform"><input type="text" id="sNome" placeholder="Descrição (ex.: Rescisão Cogna, Notebook 10x)"><select id="sTipo"><option value="receita">Receita</option><option value="despesa">Despesa</option></select><input class="v" inputmode="decimal" id="sVal" placeholder="Valor (por mês)"><select id="sRec"><option value="unica">Uma vez</option><option value="mensal">Todo mês</option></select><input type="month" id="sIni" value="${addMes(NOW,1)}" aria-label="A partir de"><input type="number" id="sMeses" min="0" placeholder="Nº de meses" title="Para 'todo mês': quantos meses (ex.: 10 parcelas). Vazio = sem prazo"><button class="btn primary" id="sAdd">Adicionar simulação</button></div>
+    <p class="small muted">Compra parcelada: escolha <b>Despesa</b>, <b>Todo mês</b>, o valor da parcela e o número de parcelas.</p></section>
+
+  <section class="panel"><h2 style="margin-bottom:8px">Entradas e saídas previstas</h2><div style="position:relative;height:280px"><canvas id="cPlano" aria-label="Gráfico de entradas e saídas previstas"></canvas></div></section>`;
+  const reg=()=>{save();const y=scrollY;vPlano();scrollTo(0,y)};
+  $$("[data-meta]").forEach(i=>{i.onclick=e=>e.stopPropagation();i.onchange=()=>{const M=MM(i.dataset.meta);M.meta=i.value.trim()===""?null:parseBR(i.value);reg()}});
+  $$("[data-abre]").forEach(r=>{const t=()=>{PLANO_ABERTO=PLANO_ABERTO===r.dataset.abre?null:r.dataset.abre;const y=scrollY;vPlano();scrollTo(0,y)};r.onclick=t;r.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();t()}}});
+  $("#simOn").onchange=e=>{S.cfg.simOn=e.target.checked;reg()};
+  $$("[data-simon]").forEach(c=>c.onchange=()=>{const x=sims().find(z=>z.id===c.dataset.simon);x.ativa=c.checked;reg()});
+  $$("[data-simdel]").forEach(b=>b.onclick=()=>{const x=sims().find(z=>z.id===b.dataset.simdel);if(confirm(`Excluir a simulação "${x.nome}"?`)){S.sims=sims().filter(z=>z!==x);reg()}});
+  $("#sAdd").onclick=()=>{const nome=$("#sNome").value.trim(),v=r2(parseBR($("#sVal").value));if(!nome||!v){alert("Informe a descrição e o valor.");return}
+    sims().push({id:uid4(),nome,tipo:$("#sTipo").value,valor:Math.abs(v),rec:$("#sRec").value,inicio:$("#sIni").value||addMes(NOW,1),meses:parseInt($("#sMeses").value)||0,ativa:true});reg()};
   const cor=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  charts.push(new Chart($("#cPlano"),{type:"bar",data:{labels:meses.map(m=>MABR[+m.split("-")[1]-1]),datasets:[{label:"Rendas",data:ps.map(p=>p.R.total),backgroundColor:cor("--blue")},{label:"Gastos",data:ps.map(p=>p.saidas),backgroundColor:cor("--ochre")}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.raw)}`}}},scales:{y:{ticks:{callback:v=>brl0(v)}}}}}));
+  charts.push(new Chart($("#cPlano"),{type:"bar",data:{labels:meses.map(m=>MABR[+m.split("-")[1]-1]),datasets:[{label:"Entradas",data:ps.map(p=>p.R.total+p.sim.rec),backgroundColor:cor("--green")},{label:"Saídas",data:ps.map(p=>p.saidas),backgroundColor:cor("--red")}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${brl(c.raw)}`}}},scales:{y:{ticks:{callback:v=>brl0(v)}}}}}));
 }
 
 /* ===== Leitor de holerites (modelo Kroton/Cogna e SEED-PR, com leitura por colunas) ===== */
@@ -1064,6 +1210,12 @@ async function vFaturas(){
       <p class="small muted" style="margin:8px 0 0">Use o PDF baixado do app ou do site do banco. A leitura acontece no seu computador: o arquivo não é enviado a lugar nenhum.</p>
       <div id="fRev"></div>
     </div></section>`;
+  if(!its.length){const pd=parcelasDetalhe(m);if(pd.itens.length){const porCat={};pd.itens.forEach(i=>{(porCat[i.cat]||=[]).push(i)});const tot=pd.itens.reduce((s2,i)=>s2+i.valor,0);
+    html+=`<section class="sheet"><div class="sheet-h"><h2>Parcelas já previstas para ${meses}</h2><span class="small muted">vindas da fatura de ${nomeMes(pd.base)} · total ${brl(tot)}</span></div>
+    <p class="small muted" style="padding:0 16px">Estas parcelas vão aparecer na fatura de ${meses}. Quando você importar a fatura, elas entram de verdade.</p>
+    ${Object.entries(porCat).sort((a2,b2)=>b2[1].reduce((x,i)=>x+i.valor,0)-a2[1].reduce((x,i)=>x+i.valor,0)).map(([c2,it2])=>`<details class="grp" open><summary><span>${esc(c2)}</span><span class="muted small">${it2.length} parcela(s)</span><span class="num">${brl(it2.reduce((x,i)=>x+i.valor,0))}</span></summary>
+      <div class="tw"><table class="fat"><colgroup><col><col style="width:90px"><col style="width:120px"><col style="width:140px"><col style="width:120px"></colgroup><thead><tr><th>Compra</th><th class="r">Parcela</th><th class="r">Valor</th><th>Cartão</th><th>Última</th></tr></thead><tbody>
+      ${it2.map(i=>`<tr class="previsto"><td>${esc(i.descricao)}</td><td class="r small">${i.n}/${i.t}</td><td class="r num">${brl(i.valor)}</td><td class="small">${esc(i.cartao)}</td><td class="small">${esc(nomeMes(i.fim))}</td></tr>`).join("")}</tbody></table></div></details>`).join("")}</section>`}}
   if(its.length){
     html+=`<section class="sheet"><div class="sheet-h"><h2>Lançamentos de ${meses}</h2>
       <div class="row" style="align-items:center"><select id="fFiltro" style="width:auto"><option value="">Todos os cartões</option>${porCartao.map(([k,v])=>`<option value="${esc(k)}" ${FAT_FILTRO===k?"selected":""}>${esc(k)} (${brl0(v)})</option>`).join("")}</select>
