@@ -679,6 +679,10 @@ function render(){if(!S)return;charts.forEach(c=>c.destroy());charts=[];topo();m
 async function carregarFaturasRecentes(){const ms=[];for(let k=-4;k<=1;k++)ms.push(addMes(NOW,k));ms.push(mk());await Promise.all([...new Set(ms)].map(fatCarregar))}
 
 /* ---------- INÍCIO ---------- */
+
+/* ---------- carinhas coloridas: verde (tranquilo), amarela (apertado), vermelha (no vermelho) ---------- */
+function humor(v){return v<0?{cor:"#C0392B",txt:"Mês no vermelho",boca:"M8.2 16.6 Q12 13.4 15.8 16.6"}:v<300?{cor:"#E0A800",txt:"Mês apertado",boca:"M8.4 15.4 H15.6"}:{cor:"#2E9D57",txt:"Mês tranquilo",boca:"M8.2 14 Q12 17.8 15.8 14"}}
+function carinha(v,tam=28){const h=humor(v);return `<svg class="carinha" width="${tam}" height="${tam}" viewBox="0 0 24 24" role="img" aria-label="${h.txt}"><title>${h.txt}</title><circle cx="12" cy="12" r="11" fill="${h.cor}"/><circle cx="8.6" cy="9.6" r="1.35" fill="#fff"/><circle cx="15.4" cy="9.6" r="1.35" fill="#fff"/><path d="${h.boca}" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>`}
 function corSaldo(v){return v<0?"var(--red)":v<300?"#B9782A":"var(--green)"}
 function vInicio(){
   const atual=NOW,prox=[1,2,3].map(k=>previsao(addMes(atual,k))),Rh=rendasMes(atual),Gh=gastosMes(atual);
@@ -703,13 +707,13 @@ function vInicio(){
   if(comp2.length)alertas.push({n:"info",t:"Renda complementar com data para acabar",d:[...new Set(comp2)].join(", ")+"."});
   $("#view").innerHTML=`
   <section class="panel" style="padding:22px">
-    <h1 style="font-size:1.5rem;margin-bottom:6px">${G.total?`Em ${nomeMes(ref)}, ${saldoRef>=0?`<span class="pos">sobraram ${brl0(saldoRef)}</span>`:`<span class="neg">faltaram ${brl0(-saldoRef)}</span>`}`:`Sem lançamentos em ${nomeMes(ref)}`}</h1>
+    <h1 style="font-size:1.5rem;margin-bottom:6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">${G.total?`${carinha(saldoRef,40)}<span>Em ${nomeMes(ref)}, ${saldoRef>=0?`<span class="pos">sobraram ${brl0(saldoRef)}</span>`:`<span class="neg">faltaram ${brl0(-saldoRef)}</span>`}</span>`:`Sem lançamentos em ${nomeMes(ref)}`}</h1>
     <div class="fluxo"><span>Renda principal <b>${brl0(R.principal)}</b></span><span>+ complementar <b>${brl0(R.complementar)}</b></span><span>− gastos <b>${brl0(G.total)}</b></span><span>= resultado <b class="${saldoRef<0?"neg":"pos"}">${brl0(saldoRef)}</b></span>${RS.resgate||RS.aporte?`<span>${RS.resgate?`+ retirado da reserva <b>${brl0(RS.resgate)}</b>`:""}${RS.aporte?` − guardado <b>${brl0(RS.aporte)}</b>`:""}</span><span>= saldo final <b class="${caixa<0?"neg":"pos"}">${brl0(caixa)}</b></span>`:""}</div>
     <p class="small muted" style="margin-top:6px">${G.reemb?`Gastos de terceiros (${brl0(G.reemb)}) ficam fora. `:""}Reserva hoje: <b>${brl0(reservaSaldo())}</b>.</p>
   </section>
   <h2 style="margin:4px 0 10px">Próximos meses</h2>
   <div class="cards3">${prox.map(p=>`<div class="mcard clic" role="button" tabindex="0" data-irplano="${p.f}" title="Ver o detalhamento de ${Nome(p.f)}" style="border-top:5px solid ${corSaldo(p.saldo)}">
-      <div class="small muted">${Nome(p.f)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="small muted">${Nome(p.f)}</span>${carinha(p.saldo,36)}</div>
       <div class="v" style="color:${corSaldo(p.saldo)}">${p.saldo>=0?"Sobra":"Falta"} ${brl0(Math.abs(p.saldo))}</div>
       <div class="small">Entra ${brl0(p.R.total)} · sai ${brl0(p.saidas)}</div>
       <div class="small" style="margin-top:6px"><span class="pill ${p.aval==="Otimista"?"warn":p.aval==="Conservadora"?"ok":""}">Previsão ${p.aval.toLowerCase()}</span></div>
@@ -907,7 +911,7 @@ function detalheMes(p){
     ${bloco("Parcelas de cartão já assumidas",p.par,"var(--red)",Object.entries(porCat).sort((a,b)=>b[1].reduce((s,i)=>s+i.valor,0)-a[1].reduce((s,i)=>s+i.valor,0)).map(([c,its])=>`<details class="det-cat"><summary><span>${esc(c)} <span class="small muted">(${its.length})</span></span><span class="num">${brl(its.reduce((s,i)=>s+i.valor,0))}</span></summary>${its.map(i=>`<div class="det-l small"><span>${esc(i.descricao)} <span class="muted">${i.n}/${i.t} · ${esc(i.cartao)}</span></span><span class="num">${brl(i.valor)}</span></div>`).join("")}</details>`).join(""))}
     ${bloco("Gastos do dia a dia (estimativa)",p.variavel,"var(--red)",`<div class="small muted">${p.meta!=null&&p.meta!==""?"meta definida por você":esc(p.med.base)}</div>`)}
     ${p.sim.itens.some(i=>i.tipo==="despesa")?bloco("Despesas simuladas",p.sim.desp,"var(--red)",p.sim.itens.filter(i=>i.tipo==="despesa").map(i=>L(i.nome,i.valor,' <span class="pill warn">simulação</span>')).join("")):""}
-    <div class="det-res">Entradas ${brl(p.R.total+p.sim.rec)} − saídas ${brl(p.saidas)} = <b style="color:${corSaldo(p.saldo)}">${p.saldo>=0?"sobra":"falta"} ${brl(Math.abs(p.saldo))}</b></div></div>`;
+    <div class="det-res"><span style="display:inline-flex;align-items:center;gap:8px;vertical-align:middle">${carinha(p.saldo,26)}</span> Entradas ${brl(p.R.total+p.sim.rec)} − saídas ${brl(p.saidas)} = <b style="color:${corSaldo(p.saldo)}">${p.saldo>=0?"sobra":"falta"} ${brl(Math.abs(p.saldo))}</b></div></div>`;
 }
 function vPlano(){
   const meses=Array.from({length:12},(_,k)=>addMes(NOW,k+1)),ps=meses.map(previsao);let acc=0;
@@ -923,7 +927,7 @@ function vPlano(){
     ${ps.map(p=>{acc=r2(acc+p.saldo);const ab=PLANO_ABERTO===p.f;return `<tr class="mesrow ${ab?"aberto":""}" data-abre="${p.f}" tabindex="0" role="button" aria-expanded="${ab}"><td><b>${ab?"▾":"▸"} ${Nome(p.f)}</b></td><td class="r num">${brl0(p.R.total)}${p.R.itens.some(i=>i.est)?' <span class="small muted">*</span>':""}</td><td class="r num">${brl0(p.fix)}</td><td class="r num">${brl0(p.par)}</td>
       <td class="r"><input class="v" inputmode="decimal" data-meta="${p.f}" value="${p.meta!=null&&p.meta!==""?nf.format(p.meta):""}" placeholder="${nf.format(p.med.valor)}" title="Meta de gastos do dia a dia. Em branco usa a média (${brl(p.med.valor)})"></td>
       ${temSim?`<td class="r num">${p.sim.rec||p.sim.desp?(p.sim.rec?"+"+brl0(p.sim.rec):"")+(p.sim.desp?" −"+brl0(p.sim.desp):""):"—"}</td>`:""}
-      <td class="r num" style="color:${corSaldo(p.saldo)}"><b>${brl0(p.saldo)}</b></td><td class="r num" style="color:${acc<0?"var(--red)":"inherit"}">${brl0(acc)}</td>
+      <td class="r num" style="color:${corSaldo(p.saldo)};white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${carinha(p.saldo,20)}<b>${brl0(p.saldo)}</b></span></td><td class="r num" style="color:${acc<0?"var(--red)":"inherit"}">${brl0(acc)}</td>
       <td><span class="pill ${p.aval==="Otimista"?"warn":p.aval==="Conservadora"?"ok":""}" title="${esc(p.motivos.join(" · "))}">${p.aval}</span></td></tr>
       ${ab?`<tr class="detrow"><td colspan="${temSim?9:8}">${detalheMes(p)}</td></tr>`:""}`}).join("")}
     </tbody></table></div><p class="small muted">* inclui renda estimada (sem holerite). A reserva não entra no cálculo.</p>
