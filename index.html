@@ -236,6 +236,10 @@ tr.tot>td{border-top:2px solid var(--line);background:var(--sunk)}
 @media (max-width:860px){.side .tabs button span{font-size:.6rem}}
 .claude-box{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(44,90,134,.10),rgba(61,122,79,.10));border-radius:14px;padding:14px 18px;margin-bottom:18px}
 dialog.dlg-res{width:min(760px,94vw);border:0;border-radius:14px;padding:18px;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.3)}dialog.dlg-res::backdrop{background:rgba(10,15,20,.5)}
+.bl-eq{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:4px 0 12px}.bl-eq>div{display:flex;flex-direction:column;background:var(--sunk);border-radius:10px;padding:10px 14px;min-width:150px}.bl-eq b{font-size:1.3rem}.bl-eq .op{font-size:1.5rem;color:var(--muted);font-weight:700}
+.bl-barra{display:flex;height:14px;border-radius:99px;overflow:hidden;background:var(--sunk)}.bl-barra span{display:block;height:100%}
+details.bl-g{border-bottom:1px solid var(--line)}details.bl-g summary{display:grid;grid-template-columns:14px 1fr auto 110px;gap:10px;align-items:center;padding:8px 0;cursor:pointer}details.bl-g summary b{text-align:right}details.bl-g .det-l{padding-left:24px}
+@media (max-width:640px){details.bl-g summary{grid-template-columns:12px 1fr 90px}details.bl-g summary .small{display:none}.bl-eq>div{min-width:0;flex:1}}
 </style>
 </head>
 <body>
@@ -737,6 +741,48 @@ function vInicio(){
 }
 
 /* ---------- RENDAS ---------- */
+
+/* ---------- do bruto ao líquido: descontos dos holerites ---------- */
+const GRUPOS_DESC=[["Previdência (INSS)",/INSS|PREVID(?!.*COMPLEM)/],["Imposto de Renda (IRRF)",/IRRF|IMPOSTO DE RENDA|\bI\.?R\.?R?F?\b/],["Previdência complementar",/PREV.*(PRIV|COMPLEM)|FUNPRESP|PARANAPREV|FUNDO DE PENS/],["Saúde e odontológico",/ODONTO|SAUDE|UNIMED|PLANO|MEDIC|HOSPIT|FARMA|AMIL|BRADESCO SAU/],["Sindicato e contribuições",/SINDIC|ASSISTENCIAL|CONFEDERATIV|ASSOCIA|CONTRIB/],["Empréstimos e consignados",/EMPREST|CONSIG|CREDITO|CARTAO|FINANC/],["Adiantamentos",/ADIANT/],["Faltas e atrasos",/FALTA|ATRASO|DSR S\/ FALTA/],["Pensão alimentícia",/PENSAO|PENSÃO/],["Vale-transporte e alimentação",/\bVALE\b|\bV\.?T\.?\b|TRANSP|REFEI|ALIMENT/]];
+function grupoDesc(d){const N=String(d||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase();if(/PLANILHA/.test(N))return "Descontos lançados na planilha antiga";for(const [g,re] of GRUPOS_DESC)if(re.test(N))return g;return "Outros descontos"}
+function holeritesMes(m){
+  const M=S.mes[m]||{},rs=(M.rendas||[]).filter(r=>r.bruto>0&&(r.origem==="holerite"||r.origem==="planilha"));
+  const linhas=rs.map(r=>{const ds=(r.descontos||[]).map(d=>({desc:d.desc,valor:d.valor,g:grupoDesc(d.desc)}));const soma=g=>r2(ds.filter(x=>x.g===g).reduce((a,x)=>a+x.valor,0));const tot=r2(ds.reduce((a,x)=>a+x.valor,0));
+    return {nome:`${fonteNome(r.fonte)}${r.tipo==="13"?" · 13º":r.tipo==="ferias"?" · férias":""}`,origem:r.origem,bruto:r2(r.bruto),inss:soma("Previdência (INSS)"),ir:soma("Imposto de Renda (IRRF)"),outros:r2(tot-soma("Previdência (INSS)")-soma("Imposto de Renda (IRRF)")),desc:tot,liq:r2(r.liquido),ds}});
+  const t=k=>r2(linhas.reduce((a,l)=>a+l[k],0)),grupos={};
+  linhas.forEach(l=>l.ds.forEach(d=>{(grupos[d.g]||={valor:0,itens:[]});grupos[d.g].valor=r2(grupos[d.g].valor+d.valor);grupos[d.g].itens.push({...d,vinc:l.nome})}));
+  return {linhas,bruto:t("bruto"),inss:t("inss"),ir:t("ir"),outros:t("outros"),desc:t("desc"),liq:t("liq"),grupos};
+}
+let HOL_ANO=false;
+function blocoBrutoLiquido(m){
+  const H=holeritesMes(m);
+  if(!H.linhas.length)return `<section class="panel"><div class="panel-h"><h2>Do bruto ao líquido</h2><button class="btn sm" id="hAno">${HOL_ANO?"Ver o mês":"Ver o ano"}</button></div>${HOL_ANO?anoBrutoLiquido():'<p class="small muted">Sem holerites neste mês. Importe os PDFs abaixo para ver o salário bruto, cada desconto e o líquido.</p>'}</section>`;
+  const pct=v=>H.bruto?Math.round(v/H.bruto*1000)/10:0;const pctT=v=>pct(v).toLocaleString("pt-BR",{maximumFractionDigits:1});
+  const gs=Object.entries(H.grupos).sort((a,b)=>b[1].valor-a[1].valor);
+  const cores=["#A93A36","#C9772A","#6E5687","#2C5A86","#3F7880","#8A6A4F","#B8607F","#5B8C5A","#7C858C","#C9A227","#555"];
+  return `<section class="panel"><div class="panel-h"><h2>Do bruto ao líquido</h2><button class="btn sm" id="hAno">${HOL_ANO?"Ver o mês":"Ver o ano"}</button></div>
+  ${HOL_ANO?anoBrutoLiquido():`
+  <div class="bl-eq"><div><span class="small muted">Salário bruto</span><b class="num">${brl(H.bruto)}</b></div><span class="op">−</span><div><span class="small muted">Descontos (${pctT(H.desc)}%)</span><b class="num neg">${brl(H.desc)}</b></div><span class="op">=</span><div><span class="small muted">Líquido recebido</span><b class="num pos">${brl(H.liq)}</b></div></div>
+  <div class="bl-barra" role="img" aria-label="Divisão do salário bruto">${gs.map(([g,x],k)=>`<span style="width:${pct(x.valor)}%;background:${cores[k%cores.length]}" title="${esc(g)}: ${brl(x.valor)}"></span>`).join("")}<span style="flex:1;background:var(--green)" title="Líquido: ${brl(H.liq)}"></span></div>
+  <div class="tw" style="margin-top:12px"><table class="plan"><thead><tr><th>Vínculo</th><th class="r">Bruto</th><th class="r">INSS</th><th class="r">IR</th><th class="r">Outros descontos</th><th class="r">Líquido</th></tr></thead><tbody>
+    ${H.linhas.map(l=>`<tr><td><b>${esc(l.nome)}</b>${l.origem==="planilha"?' <span class="small muted">(planilha)</span>':""}</td><td class="r num">${brl(l.bruto)}</td><td class="r num">${l.inss?brl(l.inss):"—"}</td><td class="r num">${l.ir?brl(l.ir):"—"}</td><td class="r num">${l.outros?brl(l.outros):"—"}</td><td class="r num"><b>${brl(l.liq)}</b></td></tr>`).join("")}
+    <tr class="tot"><td><b>Total</b></td><td class="r num"><b>${brl(H.bruto)}</b></td><td class="r num"><b>${brl(H.inss)}</b></td><td class="r num"><b>${brl(H.ir)}</b></td><td class="r num"><b>${brl(H.outros)}</b></td><td class="r num"><b>${brl(H.liq)}</b></td></tr></tbody></table></div>
+  <h3 style="font-size:1rem;margin:14px 0 6px">Para onde foi cada desconto</h3>
+  ${gs.map(([g,x],k)=>`<details class="bl-g"><summary><span class="dot" style="background:${cores[k%cores.length]}"></span><span class="nm">${esc(g)}</span><span class="small muted">${pctT(x.valor)}% do bruto</span><b class="num">${brl(x.valor)}</b></summary>
+    ${x.itens.map(i=>`<div class="det-l small"><span>${esc(i.desc)} <span class="muted">· ${esc(i.vinc)}</span></span><span class="num">${brl(i.valor)}</span></div>`).join("")}</details>`).join("")||'<p class="small muted">Nenhum desconto neste mês.</p>'}`}
+  </section>`;
+}
+function anoBrutoLiquido(){
+  const ms=Array.from({length:12},(_,i)=>mk(ANO,i+1)).map(m=>({m,H:holeritesMes(m)})).filter(x=>x.H.linhas.length);
+  if(!ms.length)return '<p class="small muted">Nenhum holerite neste ano.</p>';
+  const T=k=>r2(ms.reduce((a,x)=>a+x.H[k],0)),gAno={};ms.forEach(x=>Object.entries(x.H.grupos).forEach(([g,v])=>gAno[g]=r2((gAno[g]||0)+v.valor)));
+  return `<div class="tw"><table class="plan"><thead><tr><th>Mês</th><th class="r">Bruto</th><th class="r">INSS</th><th class="r">IR</th><th class="r">Outros</th><th class="r">Total descontado</th><th class="r">Líquido</th></tr></thead><tbody>
+  ${ms.map(x=>`<tr><td><b>${Nome(x.m)}</b></td><td class="r num">${brl0(x.H.bruto)}</td><td class="r num">${brl0(x.H.inss)}</td><td class="r num">${brl0(x.H.ir)}</td><td class="r num">${brl0(x.H.outros)}</td><td class="r num neg">${brl0(x.H.desc)}</td><td class="r num"><b>${brl0(x.H.liq)}</b></td></tr>`).join("")}
+  <tr class="tot"><td><b>Total de ${ANO}</b></td><td class="r num"><b>${brl0(T("bruto"))}</b></td><td class="r num"><b>${brl0(T("inss"))}</b></td><td class="r num"><b>${brl0(T("ir"))}</b></td><td class="r num"><b>${brl0(T("outros"))}</b></td><td class="r num neg"><b>${brl0(T("desc"))}</b></td><td class="r num"><b>${brl0(T("liq"))}</b></td></tr></tbody></table></div>
+  <p class="small">Em ${ANO}, os descontos somaram <b>${brl0(T("desc"))}</b> (${T("bruto")?Math.round(T("desc")/T("bruto")*100):0}% do bruto): ${Object.entries(gAno).sort((a,b)=>b[1]-a[1]).map(([g,v])=>`${esc(g)} ${brl0(v)}`).join(" · ")}.</p>
+  <p class="small muted">Os meses que vieram da planilha antiga têm os descontos somados em um único valor, sem o detalhe de cada linha.</p>`;
+}
+
 function vRendas(){
   const m=mk(),M=MM(m),R=rendasMes(m),P=rendasPrevistas(m);
   const fontes=S.cfg.fontes||FONTES_PADRAO;
@@ -748,6 +794,7 @@ function vRendas(){
     <div><div class="k">Renda complementar</div><div class="v">${brl0(R.complementar)}</div><div class="small muted">temporária</div></div>
     <div><div class="k">Movimento da reserva</div><div class="v">${(()=>{const r=reservaMes(m);return r.resgate||r.aporte?(r.resgate?"+"+brl0(r.resgate):"")+(r.aporte?" −"+brl0(r.aporte):""):"—"})()}</div><div class="small muted">não é renda</div></div>
     <div><div class="k">Descontos em folha</div><div class="v">${brl0(R.desc)}</div><div class="small muted">bruto ${brl0(R.bruto)}</div></div></div>
+  ${blocoBrutoLiquido(m)}
   <h2 style="margin:6px 0 10px">1. Renda principal</h2>
   <section class="panel"><div class="panel-h"><h2>Holerites</h2><div class="row"><button class="btn primary" id="hImp">Importar holerites (PDF)</button><input type="file" id="hImpF" accept="application/pdf,.pdf" multiple hidden></div></div>
     <p class="small muted" style="margin-top:-4px">O sistema lê proventos, descontos e líquido, confere as somas e identifica 13º e férias. A leitura acontece no seu computador.</p>
@@ -771,6 +818,7 @@ function vRendas(){
     ${((M.reserva)||[]).map(x=>`<div class="lin"><span>${x.tipo==="resgate"?'<span class="pill warn">retirei</span>':'<span class="pill ok">guardei</span>'} ${esc(x.desc||"")}</span><span class="num">${x.tipo==="resgate"?"+":"−"}${brl(x.valor)}</span><button class="btn sm" data-rsdel="${x.id}">×</button></div>`).join("")||'<p class="small muted">Nenhum movimento neste mês.</p>'}
     <div class="row" style="margin-top:10px"><select id="rsTipo" style="width:auto"><option value="resgate">Retirei da reserva</option><option value="aporte">Guardei na reserva</option></select><input type="text" id="rsDesc" placeholder="Descrição (opcional)" style="flex:2;min-width:160px"><input class="v" inputmode="decimal" id="rsVal" placeholder="Valor"><button class="btn" id="rsAdd">Adicionar</button></div></section>`;
   const atual=()=>{save();const y=scrollY;vRendas();scrollTo(0,y)};
+  $("#hAno")?.addEventListener("click",()=>{HOL_ANO=!HOL_ANO;const y=scrollY;vRendas();scrollTo(0,y)});
   $("#hImp").onclick=()=>$("#hImpF").click();
   $("#hImpF").onchange=async e=>{const fs=[...e.target.files];e.target.value="";if(fs.length)await holImportar(fs)};
   $$("[data-est]").forEach(i=>i.onchange=()=>{(M.estimativas||={})[i.dataset.est]=parseBR(i.value)||0;atual()});
