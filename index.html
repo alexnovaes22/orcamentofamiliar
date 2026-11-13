@@ -229,6 +229,11 @@ tr.previsto>td{color:var(--muted);font-style:italic}
   table.pag td,table.pag th{padding:8px 8px}table.pag input.v{width:88px}label.sit{white-space:normal;gap:4px}label.sit span{font-size:.82rem}
   table.pag td:first-child .small{display:block}
 }
+.metas-cfg{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}.metas-cfg .f{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted)}
+.pessoas{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:center}.pessoa{display:flex;gap:6px;align-items:center;background:var(--sunk);border-radius:10px;padding:6px 8px}.pessoa input[type=text]{width:110px;font-weight:700}
+.rec{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.rec-ic{font-size:1.5rem;line-height:1}
+tr.tot>td{border-top:2px solid var(--line);background:var(--sunk)}
+@media (max-width:860px){.side .tabs button span{font-size:.6rem}}
 </style>
 </head>
 <body>
@@ -279,6 +284,7 @@ tr.previsto>td{color:var(--muted);font-style:italic}
       <button data-v="rendas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg><span>Rendas</span></button>
       <button data-v="gastos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/></svg><span>Gastos</span></button>
       <button data-v="plano"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M8 2.5v4M16 2.5v4M3 10h18M7.5 14h3M13.5 14h3M7.5 17.5h3"/></svg><span>Planejamento</span></button>
+      <button data-v="metas"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3"/></svg><span>Metas</span></button>
       <button data-v="backup"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg><span>Backup</span></button>
     </nav>
     <div class="side-foot">🔒 Dados criptografados no seu navegador</div>
@@ -620,8 +626,8 @@ function previsao(f){
   const est=R.itens.filter(i=>i.est);if(est.length)motivos.push(`renda ainda estimada: ${est.map(i=>i.nome).join(", ")}`);
   if(est.some(i=>i.manual)){const man=est.filter(i=>i.manual);man.forEach(i=>{});}
   if(!med.detalhado&&!meta)motivos.push("gastos do dia a dia estimados pela planilha antiga (fica mais preciso com 3 meses de faturas importadas)");
-  const sim=simMes(f);
-  return {f,R,fix,par,variavel,med,meta,saidas:r2(saidas+sim.desp),saldo:r2(saldo+sim.rec-sim.desp),aval,motivos,sim,saldoSemSim:saldo};
+  const sim=simMes(f),mc=S.cfg.metas,metaV=(mc&&mc.noPlano&&f>=mc.inicio&&f<=mc.fim)?r2(totMesadas(mc)+(Number(mc.poupanca)||0)):0;
+  return {f,R,fix,par,variavel,med,meta,saidas:r2(saidas+sim.desp+metaV),saldo:r2(saldo+sim.rec-sim.desp-metaV),aval,motivos,sim,saldoSemSim:saldo,metas:metaV};
 }
 /* ---------- parcelas de cartão previstas, com detalhe ---------- */
 function parcelasDetalhe(f){
@@ -650,7 +656,7 @@ function simMes(f){
 $$(".tabs button").forEach(b=>b.onclick=()=>{VIEW=b.dataset.v;render()});
 $("#y-prev").onclick=()=>{ANO--;render()};
 $("#y-next").onclick=()=>{ANO++;render()};
-const TITULOS={inicio:["Visão geral","como está e como vai ficar"],rendas:["Rendas","holerites, renda complementar e reserva"],gastos:["Gastos","faturas, contas fixas e outros gastos"],plano:["Planejamento","próximos 12 meses, parcelamentos e simulações"],backup:["Backup e conta","guarde uma cópia dos seus dados"]};
+const TITULOS={inicio:["Visão geral","como está e como vai ficar"],rendas:["Rendas","holerites, renda complementar e reserva"],gastos:["Gastos","faturas, contas fixas e outros gastos"],plano:["Planejamento","próximos 12 meses, parcelamentos e simulações"],metas:["Metas","poupança, mesadas e o que ajustar para chegar lá"],backup:["Backup e conta","guarde uma cópia dos seus dados"]};
 function topo(){
   $$(".tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===VIEW));
   {const t=TITULOS[VIEW]||["",""];$("#pgTitle").textContent=t[0]+((VIEW==="rendas"||VIEW==="gastos")?` · ${Nome(mk())}`:"");$("#pgSub").textContent=t[1];document.title=t[0]+" · Orçamento da Família"}
@@ -658,7 +664,7 @@ function topo(){
   $("#m-btns").innerHTML=MABR.map((n,i)=>{const m=mk(ANO,i+1);return `<button data-mi="${i+1}" class="${mesTemDados(m)?"real":""}" aria-pressed="${i+1===MES}" title="${MESES[i]}">${n}</button>`}).join("");
   $("#m-btns button[aria-pressed=true]")?.scrollIntoView({inline:"center",block:"nearest"});
   $$("#m-btns button").forEach(b=>b.onclick=async()=>{MES=+b.dataset.mi;FAT_FILTRO="";if(VIEW==="inicio"||VIEW==="plano")VIEW="gastos";await fatCarregar(mk());render()});
-  $(".months").classList.toggle("hidden",VIEW==="inicio"||VIEW==="plano"||VIEW==="backup");
+  $(".months").classList.toggle("hidden",VIEW==="inicio"||VIEW==="plano"||VIEW==="metas"||VIEW==="backup");
 }
 let lembreteAdiado=false;
 function lembreteBackup(){
@@ -675,7 +681,7 @@ function mostrarLembrete(){
   el.innerHTML=`<div><span>${esc(msg)}</span><span class="row"><button class="btn sm primary" id="lb-baixar">Baixar Excel agora</button><button class="btn sm" id="lb-depois">Lembrar depois</button></span></div>`;
   $("#lb-baixar").onclick=exportXlsx;$("#lb-depois").onclick=()=>{lembreteAdiado=true;mostrarLembrete()};
 }
-function render(){if(!S)return;charts.forEach(c=>c.destroy());charts=[];topo();mostrarLembrete();({inicio:vInicio,rendas:vRendas,gastos:vGastos,plano:vPlano,backup:vBackup})[VIEW]()}
+function render(){if(!S)return;charts.forEach(c=>c.destroy());charts=[];topo();mostrarLembrete();({inicio:vInicio,rendas:vRendas,gastos:vGastos,plano:vPlano,metas:vMetas,backup:vBackup})[VIEW]()}
 async function carregarFaturasRecentes(){const ms=[];for(let k=-4;k<=1;k++)ms.push(addMes(NOW,k));ms.push(mk());await Promise.all([...new Set(ms)].map(fatCarregar))}
 
 /* ---------- INÍCIO ---------- */
@@ -898,6 +904,107 @@ function vPlanilhaAntiga(){
 }
 
 /* ---------- PLANEJAMENTO ---------- */
+
+/* ================= METAS: poupança e mesadas ================= */
+function metasCfg(){
+  return (S.cfg.metas||={inicio:"2027-01",fim:"2027-12",poupanca:1500,prioridade:"mesadas",noPlano:false,
+    mesadas:[{nome:"Alex",valor:200},{nome:"Renata",valor:200},{nome:"Isadora",valor:100},{nome:"Murilo",valor:100}]});
+}
+const totMesadas=c=>r2(c.mesadas.reduce((a,x)=>a+(Number(x.valor)||0),0));
+function mesesMeta(c){const out=[];let m=c.inicio;for(let k=0;k<36&&m<=c.fim;k++){out.push(m);m=addMes(m,1)}return out}
+function distribuir(sobra,c){
+  const tm=totMesadas(c),pm=Number(c.poupanca)||0,disp=Math.max(0,sobra);let m=0,pp=0;
+  if(c.prioridade==="poupanca"){pp=Math.min(disp,pm);m=Math.min(disp-pp,tm)}else{m=Math.min(disp,tm);pp=Math.min(disp-m,pm)}
+  const esc2=tm?m/tm:0;
+  return {mes:r2(m),poup:r2(pp),pessoas:c.mesadas.map(x=>r2((Number(x.valor)||0)*esc2)),falta:r2(tm+pm-m-pp),ok:m>=tm-0.005&&pp>=pm-0.005,nada:m+pp<=0};
+}
+function vMetas(){
+  const c=metasCfg(),meses=mesesMeta(c),tm=totMesadas(c),pm=Number(c.poupanca)||0,alvo=tm+pm;
+  const salvaNoPlano=c.noPlano;c.noPlano=false; /* a sobra é calculada antes das metas */
+  const linhas=meses.map(f=>{const p=previsao(f),d=distribuir(p.saldo,c),real=f<=NOW?reservaMes(f).aporte:null;return {f,sobra:p.saldo,d,real}});
+  c.noPlano=salvaNoPlano;
+  const somaSobra=r2(linhas.reduce((a,l)=>a+l.sobra,0)),somaPoup=r2(linhas.reduce((a,l)=>a+l.d.poup,0)),somaMes=r2(linhas.reduce((a,l)=>a+l.d.mes,0));
+  const metaAno=r2(alvo*meses.length),gapAno=r2(metaAno-somaSobra),gapMes=r2(Math.max(0,gapAno)/meses.length);
+  const okMeses=linhas.filter(l=>l.d.ok).length,pct=metaAno?Math.max(0,Math.min(100,Math.round(somaSobra/metaAno*100))):0;
+  /* recomendações */
+  const recs=[];
+  const neg=linhas.filter(l=>l.sobra<0);
+  const antes=[];{let m=addMes(NOW,1);while(m<c.inicio&&antes.length<6){antes.push(previsao(m));m=addMes(m,1)}}
+  const sobraAntes=r2(antes.reduce((a,p)=>a+Math.max(0,p.saldo),0)),deficitInicio=r2(neg.filter(l=>l.f<=addMes(c.inicio,2)).reduce((a,l)=>a-l.sobra,0));
+  const mesesAntes=antes.filter(p=>p.saldo>0).map(p=>nomeMes(p.f)).join(", ");
+  if(sobraAntes>0&&gapAno>0){const fundo=r2(Math.min(gapAno,sobraAntes));
+    recs.push({ic:"🛟",t:`Separe ${brl0(fundo)} da sobra de ${mesesAntes} como “fundo das metas”`,d:`Antes de começar, a previsão é de ${brl0(sobraAntes)} de sobra (${mesesAntes}). ${fundo>=gapAno?`Esse fundo cobre toda a diferença do período: use-o para completar as metas nos meses curtos (${linhas.filter(l=>!l.d.ok).map(l=>nomeMes(l.f)).join(", ")}) e todas ficam cumpridas.`:`Ele cobre ${brl0(fundo)} dos ${brl0(gapAno)} que faltam; o restante precisa vir das sugestões abaixo.`} Registre o valor em Rendas → Reserva → “Guardei na reserva”.`})}
+  else if(sobraAntes>0&&deficitInicio>0)recs.push({ic:"🛟",t:`Separe ${brl0(deficitInicio)} da sobra de ${mesesAntes} para cobrir o início de ${c.inicio.slice(0,4)}`,d:`${neg.filter(l=>l.f<=addMes(c.inicio,2)).map(l=>Nome(l.f)).join(" e ")} ${neg.length>1?"devem fechar":"deve fechar"} no negativo. Guardar essa diferença evita começar o ano devendo.`});
+  if(gapAno<=0)recs.push({ic:"✅",t:"As metas cabem no ano",d:`A sobra prevista (${brl0(somaSobra)}) cobre as metas (${brl0(metaAno)}). ${linhas.some(l=>!l.d.ok)?"Alguns meses ficam curtos: guarde mais nos meses bons para compensar.":""}`});
+  else recs.unshift({ic:"🎯",t:`Faltam ${brl0(gapAno)} no período para cumprir todas as metas: cerca de ${brl0(gapMes)} por mês`,d:`Sobra prevista ${brl0(somaSobra)} × metas ${brl0(metaAno)}. As sugestões abaixo mostram de onde pode sair essa diferença.`});
+  /* parcelamentos que terminam */
+  const PA=parcelamentosAtivos(),fim={};PA.itens.filter(i=>!i.reemb).forEach(i=>{const lib=addMes(i.fim,1);(fim[lib]||=[]).push(i)});
+  const libs=Object.keys(fim).sort().filter(m=>m<=c.fim).map(m=>({m,v:r2(fim[m].reduce((a,i)=>a+i.valor,0)),its:fim[m]}));
+  if(libs.length){const acc=[];let tot=0;libs.forEach(l=>{tot+=l.v;acc.push(`${nomeMes(l.m)}: +${brl0(l.v)}`)});
+    recs.push({ic:"💳",t:`Evite novas compras parceladas: as parcelas atuais, ao terminar, liberam juntas ${brl0(tot)} por mês até ${nomeMes(libs[libs.length-1].m)}`,d:`Cada mês em que um parcelamento termina, sobra mais: ${acc.slice(0,8).join(" · ")}. Uma nova compra parcelada consome essa folga.`})}
+  /* renda complementar que acaba */
+  const fimComp=[...new Set(meses.flatMap(f=>rendasPrevistas(f).itens.filter(i=>i.comp&&i.ate&&i.ate>=c.inicio&&i.ate<c.fim).map(i=>`${i.nome}|${i.ate}|${i.valor}`)))];
+  fimComp.forEach(x=>{const [n,a,v]=x.split("|");recs.push({ic:"📉",t:`${n} termina em ${nomeMes(a)}: a partir de ${nomeMes(addMes(a,1))} entram ${brl0(+v)} a menos`,d:"Os meses seguintes ficam mais apertados. Se puder, guarde um pouco mais enquanto ela durar."})});
+  /* cortes no dia a dia */
+  const base=ultimoComFatura(NOW),cats={};
+  if(base){(FAT[base].itens||[]).forEach(i=>{if(i.parcela||fatEhReemb(i.tipo))return;const k=i.tipo?fatCat(i.tipo):"Outros";cats[k]=(cats[k]||0)+i.valor});
+    ((S.mes[base]||{}).gastos||[]).filter(g=>g.origem!=="planilha").forEach(g=>{cats[g.cat]=(cats[g.cat]||0)+g.valor})}
+  const flex=Object.entries(cats).filter(([k,v])=>v>50&&!["Casa e consórcio","Banco e juros","Educação e filhos"].includes(k)).sort((a,b)=>b[1]-a[1]);
+  const totFlex=flex.reduce((a,[,v])=>a+v,0);
+  let cortes=[];if(gapMes>0&&totFlex>0){cortes=flex.slice(0,6).map(([k,v])=>{const cut=Math.min(v*0.3,gapMes*v/totFlex);return {k,v,cut:r2(cut),novo:r2(v-cut),pct:Math.round(cut/v*100)}});
+    const somaCut=r2(cortes.reduce((a,x)=>a+x.cut,0));
+    recs.push({ic:"✂️",t:`Reduza cerca de ${brl0(somaCut)} por mês nos gastos do dia a dia`,d:`Com base nos gastos à vista de ${nomeMes(base)} (sem parcelas e sem gastos de terceiros):`,cortes,resto:r2(gapMes-somaCut)})}
+  /* contas fixas para revisar */
+  const fixRev=S.fixas.filter(f=>f.ativa!==false&&f.valor>=100&&!["Casa e consórcio","Educação e filhos"].includes(f.cat)).sort((a,b)=>b.valor-a.valor).slice(0,4);
+  if(gapAno>0&&fixRev.length)recs.push({ic:"🔎",t:"Revise as maiores contas fixas",d:fixRev.map(f=>`${f.nome} (${brl0(f.valor)})`).join(" · ")+". Pequenas reduções aqui valem para o ano inteiro."});
+  const reemb=(FAT[base]?.itens||[]).filter(i=>fatEhReemb(i.tipo)).reduce((a,i)=>a+i.valor,0);
+  if(reemb>100)recs.push({ic:"🔁",t:`Cobre os reembolsos: ${brl0(reemb)} em gastos de terceiros passaram pelos cartões em ${nomeMes(base)}`,d:"Esse dinheiro sai da sua conta até ser devolvido. Receber em dia ajuda a fechar o mês."});
+
+  const cor=l=>l.d.ok?"#2E9D57":l.d.nada?"#C0392B":"#E0A800";
+  $("#view").innerHTML=`
+  <div class="sum4">
+    <div><div class="k">Meta por mês</div><div class="v">${brl0(alvo)}</div><div class="small muted">poupança ${brl0(pm)} + mesadas ${brl0(tm)}</div></div>
+    <div><div class="k">Sobra prevista no período</div><div class="v ${somaSobra<metaAno?"neg":"pos"}">${brl0(somaSobra)}</div><div class="small muted">meta ${brl0(metaAno)} · cobre ${pct}%</div></div>
+    <div><div class="k">Poupança prevista</div><div class="v">${brl0(somaPoup)}</div><div class="small muted">meta ${brl0(pm*meses.length)} (${pm?Math.round(somaPoup/(pm*meses.length)*100):0}%)</div></div>
+    <div><div class="k">Metas completas</div><div class="v">${okMeses} de ${meses.length} meses</div><div class="small muted">${gapAno>0?`faltam ~${brl0(gapMes)}/mês`:"as metas cabem no ano"}</div></div>
+  </div>
+
+  <section class="panel"><div class="panel-h"><h2>Suas metas</h2><span class="small muted">edite à vontade: tudo é recalculado na hora</span></div>
+    <div class="metas-cfg">
+      <label class="f">De <input type="month" id="mIni" value="${c.inicio}"></label><label class="f">Até <input type="month" id="mFim" value="${c.fim}"></label>
+      <label class="f">Poupança por mês <input class="v" inputmode="decimal" id="mPoup" value="${nf.format(pm)}"></label>
+      <label class="f">Prioridade <select id="mPri"><option value="mesadas" ${c.prioridade!=="poupanca"?"selected":""}>Mesadas primeiro</option><option value="poupanca" ${c.prioridade==="poupanca"?"selected":""}>Poupança primeiro</option></select></label>
+    </div>
+    <div class="pessoas">${c.mesadas.map((x,k)=>`<div class="pessoa"><input type="text" data-mn="${k}" value="${esc(x.nome)}" aria-label="Nome"><input class="v" inputmode="decimal" data-mv="${k}" value="${nf.format(x.valor)}" aria-label="Mesada de ${esc(x.nome)}"><button class="btn sm" data-mx="${k}" aria-label="Remover ${esc(x.nome)}">×</button></div>`).join("")}
+      <button class="btn sm" id="mAdd">+ pessoa</button></div>
+    <label class="small" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="mPlano" ${c.noPlano?"checked":""}> Descontar as metas no Planejamento e na Visão geral (mostra quanto sobra <b>depois</b> de guardar e das mesadas)</label>
+  </section>
+
+  <section class="panel"><div class="panel-h"><h2>Mês a mês</h2><span class="small muted">a sobra prevista é dividida entre ${c.prioridade==="poupanca"?"poupança e depois mesadas":"mesadas e depois poupança"}</span></div>
+    <div class="tw"><table class="plan"><thead><tr><th>Mês</th><th class="r">Sobra prevista</th>${c.mesadas.map(x=>`<th class="r">${esc(x.nome)}</th>`).join("")}<th class="r">Poupança</th><th class="r">Falta</th><th class="r">Guardado de fato</th></tr></thead><tbody>
+    ${linhas.map(l=>`<tr><td><span style="display:inline-flex;align-items:center;gap:8px">${carinha(l.d.ok?400:l.d.nada?-1:100,20)}<b>${Nome(l.f)}</b></span></td><td class="r num" style="color:${corSaldo(l.sobra)}">${brl0(l.sobra)}</td>
+      ${l.d.pessoas.map((v,k)=>`<td class="r num ${v<(Number(c.mesadas[k].valor)||0)-0.005?"neg":""}">${brl0(v)}</td>`).join("")}
+      <td class="r num ${l.d.poup<pm-0.005?"neg":"pos"}"><b>${brl0(l.d.poup)}</b></td><td class="r num">${l.d.falta>0.005?`<span class="neg">${brl0(l.d.falta)}</span>`:"—"}</td><td class="r num">${l.real!=null?brl0(l.real):'<span class="muted">—</span>'}</td></tr>`).join("")}
+    <tr class="tot"><td><b>Total</b></td><td class="r num"><b>${brl0(somaSobra)}</b></td>${c.mesadas.map((x,k)=>`<td class="r num"><b>${brl0(linhas.reduce((a,l)=>a+l.d.pessoas[k],0))}</b></td>`).join("")}<td class="r num"><b>${brl0(somaPoup)}</b></td><td class="r num"><b>${brl0(linhas.reduce((a,l)=>a+l.d.falta,0))}</b></td><td></td></tr>
+    </tbody></table></div>
+    <p class="small muted">“Guardado de fato” vem dos registros de <b>Rendas → Reserva → Guardei na reserva</b>. Registre lá o que você realmente guardar em cada mês.</p></section>
+
+  <section class="panel"><h2 style="margin-bottom:10px">O que fazer para chegar lá</h2>
+    ${recs.map(r=>`<div class="rec"><div class="rec-ic" aria-hidden="true">${r.ic}</div><div><b>${esc(r.t)}</b><div class="small">${esc(r.d)}</div>
+      ${r.cortes?`<div class="tw" style="margin-top:6px"><table class="plan"><thead><tr><th>Categoria</th><th class="r">Hoje</th><th class="r">Meta</th><th class="r">Reduzir</th></tr></thead><tbody>${r.cortes.map(x=>`<tr><td>${esc(x.k)}</td><td class="r num">${brl0(x.v)}</td><td class="r num"><b>${brl0(x.novo)}</b></td><td class="r num neg">−${brl0(x.cut)} (${x.pct}%)</td></tr>`).join("")}</tbody></table></div>${r.resto>1?`<div class="small muted">Os cortes acima foram limitados a 30% por categoria; os ${brl0(r.resto)} restantes por mês precisam vir de contas fixas, renda extra ou de ajustar as metas.</div>`:""}`:""}</div></div>`).join("")}
+    <p class="small muted">As sugestões usam as previsões do sistema: renda pelo último holerite, contas fixas, parcelas já assumidas e a média do dia a dia. Quanto mais meses de faturas importadas, mais precisas ficam.</p></section>`;
+  const reg=()=>{save();const y=scrollY;vMetas();scrollTo(0,y)};
+  $("#mIni").onchange=e=>{c.inicio=e.target.value||c.inicio;if(c.fim<c.inicio)c.fim=addMes(c.inicio,11);reg()};
+  $("#mFim").onchange=e=>{c.fim=e.target.value||c.fim;if(c.fim<c.inicio)c.fim=c.inicio;reg()};
+  $("#mPoup").onchange=e=>{c.poupanca=Math.max(0,r2(parseBR(e.target.value)));reg()};
+  $("#mPri").onchange=e=>{c.prioridade=e.target.value;reg()};
+  $("#mPlano").onchange=e=>{c.noPlano=e.target.checked;reg()};
+  $$("[data-mn]").forEach(i=>i.onchange=()=>{c.mesadas[+i.dataset.mn].nome=i.value.trim()||"Pessoa";reg()});
+  $$("[data-mv]").forEach(i=>i.onchange=()=>{c.mesadas[+i.dataset.mv].valor=Math.max(0,r2(parseBR(i.value)));reg()});
+  $$("[data-mx]").forEach(b=>b.onclick=()=>{c.mesadas.splice(+b.dataset.mx,1);reg()});
+  $("#mAdd").onclick=()=>{c.mesadas.push({nome:"Nova pessoa",valor:100});reg()};
+}
+
 let PLANO_ABERTO=null;
 function detalheMes(p){
   const pd=parcelasDetalhe(p.f),porCat={};pd.itens.filter(i=>!i.reemb).forEach(i=>{(porCat[i.cat]||=[]).push(i)});
@@ -911,6 +1018,7 @@ function detalheMes(p){
     ${bloco("Parcelas de cartão já assumidas",p.par,"var(--red)",Object.entries(porCat).sort((a,b)=>b[1].reduce((s,i)=>s+i.valor,0)-a[1].reduce((s,i)=>s+i.valor,0)).map(([c,its])=>`<details class="det-cat"><summary><span>${esc(c)} <span class="small muted">(${its.length})</span></span><span class="num">${brl(its.reduce((s,i)=>s+i.valor,0))}</span></summary>${its.map(i=>`<div class="det-l small"><span>${esc(i.descricao)} <span class="muted">${i.n}/${i.t} · ${esc(i.cartao)}</span></span><span class="num">${brl(i.valor)}</span></div>`).join("")}</details>`).join(""))}
     ${bloco("Gastos do dia a dia (estimativa)",p.variavel,"var(--red)",`<div class="small muted">${p.meta!=null&&p.meta!==""?"meta definida por você":esc(p.med.base)}</div>`)}
     ${p.sim.itens.some(i=>i.tipo==="despesa")?bloco("Despesas simuladas",p.sim.desp,"var(--red)",p.sim.itens.filter(i=>i.tipo==="despesa").map(i=>L(i.nome,i.valor,' <span class="pill warn">simulação</span>')).join("")):""}
+    ${p.metas?bloco("Metas (poupança + mesadas)",p.metas,"var(--violet)",'<div class="small muted">descontadas porque a opção está ligada em Metas</div>'):""}
     <div class="det-res"><span style="display:inline-flex;align-items:center;gap:8px;vertical-align:middle">${carinha(p.saldo,26)}</span> Entradas ${brl(p.R.total+p.sim.rec)} − saídas ${brl(p.saidas)} = <b style="color:${corSaldo(p.saldo)}">${p.saldo>=0?"sobra":"falta"} ${brl(Math.abs(p.saldo))}</b></div></div>`;
 }
 function vPlano(){
