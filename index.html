@@ -234,6 +234,8 @@ tr.previsto>td{color:var(--muted);font-style:italic}
 .rec{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.rec-ic{font-size:1.5rem;line-height:1}
 tr.tot>td{border-top:2px solid var(--line);background:var(--sunk)}
 @media (max-width:860px){.side .tabs button span{font-size:.6rem}}
+.claude-box{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(44,90,134,.10),rgba(61,122,79,.10));border-radius:14px;padding:14px 18px;margin-bottom:18px}
+dialog.dlg-res{width:min(760px,94vw);border:0;border-radius:14px;padding:18px;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.3)}dialog.dlg-res::backdrop{background:rgba(10,15,20,.5)}
 </style>
 </head>
 <body>
@@ -918,6 +920,53 @@ function distribuir(sobra,c){
   const esc2=tm?m/tm:0;
   return {mes:r2(m),poup:r2(pp),pessoas:c.mesadas.map(x=>r2((Number(x.valor)||0)*esc2)),falta:r2(tm+pm-m-pp),ok:m>=tm-0.005&&pp>=pm-0.005,nada:m+pp<=0};
 }
+
+/* ---------- resumo anônimo para conversar com o Claude ---------- */
+function resumoParaClaude(){
+  const c=metasCfg(),L=[],f2=v=>brl0(v),meses=mesesMeta(c);
+  const rot=c.mesadas.map((x,k)=>{const adultos=c.mesadas.slice(0,2).length;return k<2?`Adulto ${k+1}`:`Filho ${k-1}`});
+  L.push("Quero ajuda para planejar as finanças da minha família. Abaixo está um resumo gerado pelo meu sistema de orçamento (valores líquidos, em R$). Analise e me diga, de forma objetiva: se as metas são viáveis, o que ajustar e em que ordem, e quais riscos você enxerga.");
+  L.push("");L.push(`Data do resumo: ${new Date().toLocaleDateString("pt-BR")}`);
+  L.push("");L.push("== Últimos meses (real) ==");
+  [3,2,1,0].map(k=>addMes(NOW,-k)).filter(mesTemDados).forEach(m=>{const R=rendasMes(m),G=gastosMes(m),RS=reservaMes(m);
+    L.push(`${Nome(m)}: renda principal ${f2(R.principal)} | complementar ${f2(R.complementar)} | gastos ${f2(G.total)} (contas fixas ${f2(G.fixas)}, cartões ${f2(G.cartao)}, outros ${f2(G.outros)}${G.planilha?`, planilha ${f2(G.planilha)}`:""}) | resultado ${f2(R.liquido-G.total)}${RS.resgate?` | retirado da reserva ${f2(RS.resgate)}`:""}${RS.aporte?` | guardado ${f2(RS.aporte)}`:""}`);
+    const cats=Object.entries(G.porCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k} ${f2(v)}`).join("; ");if(cats)L.push(`   por categoria: ${cats}`)});
+  L.push("");L.push("== Contas fixas (valor mensal) ==");
+  L.push(S.fixas.filter(f=>f.ativa!==false&&f.valor).map(f=>`${f.nome} ${f2(f.valor)}`).join("; ")||"(nenhuma)");
+  const PA=parcelamentosAtivos(),pc={};PA.itens.filter(i=>!i.reemb).forEach(i=>{const k=i.cat;(pc[k]||={v:0,fim:""});pc[k].v+=i.valor;if(i.fim>pc[k].fim)pc[k].fim=i.fim});
+  L.push("");L.push("== Parcelamentos em andamento (por categoria) ==");
+  L.push(Object.entries(pc).sort((a,b)=>b[1].v-a[1].v).map(([k,x])=>`${k}: ${f2(x.v)}/mês, última parcela em ${nomeMes(x.fim)}`).join("; ")||"(nenhum)");
+  const reemb=(FAT[PA.base]?.itens||[]).filter(i=>fatEhReemb(i.tipo)).reduce((a,i)=>a+i.valor,0);if(reemb)L.push(`Gastos de terceiros nos cartões (a receber) no último mês: ${f2(reemb)}`);
+  L.push("");L.push("== Previsão dos próximos 12 meses (antes das metas) ==");
+  const salva=c.noPlano;c.noPlano=false;
+  for(let k=1;k<=12;k++){const f=addMes(NOW,k),p=previsao(f);L.push(`${Nome(f)}: entradas ${f2(p.R.total)} (complementar ${f2(p.R.complementar)}) | fixas ${f2(p.fix)} | parcelas ${f2(p.par)} | dia a dia ${f2(p.variavel)}${p.sim.itens.length?` | simulações ${p.sim.rec?"+"+f2(p.sim.rec):""}${p.sim.desp?" −"+f2(p.sim.desp):""}`:""} | saldo ${f2(p.saldo)}`)}
+  const comps=[...new Set(Array.from({length:12},(_,k)=>rendasPrevistas(addMes(NOW,k+1))).flatMap(R=>R.itens.filter(i=>i.comp&&i.ate).map(i=>`${i.nome} até ${nomeMes(i.ate)}`)))];
+  if(comps.length)L.push(`Rendas temporárias com fim: ${comps.join("; ")}`);
+  const ativas=sims().filter(x=>x.ativa);if(ativas.length&&simsLigadas())L.push(`Simulações incluídas: ${ativas.map(x=>`${x.tipo} ${f2(x.valor)} ${x.rec==="unica"?"em "+nomeMes(x.inicio):"por mês desde "+nomeMes(x.inicio)+(x.meses?` por ${x.meses} meses`:"")}`).join("; ")}`);
+  L.push("");L.push("== Metas ==");
+  L.push(`Período: ${nomeMes(c.inicio)} a ${nomeMes(c.fim)} | poupança ${f2(c.poupanca)}/mês | mesadas: ${c.mesadas.map((x,k)=>`${rot[k]} ${f2(x.valor)}`).join(", ")} | prioridade: ${c.prioridade==="poupanca"?"poupança primeiro":"mesadas primeiro"}`);
+  const linhas=meses.map(f=>{const p=previsao(f);return {f,sobra:p.saldo,d:distribuir(p.saldo,c)}});c.noPlano=salva;
+  L.push(`Sobra prevista no período: ${f2(linhas.reduce((a,l)=>a+l.sobra,0))} | metas no período: ${f2((totMesadas(c)+(Number(c.poupanca)||0))*meses.length)} | poupança prevista: ${f2(linhas.reduce((a,l)=>a+l.d.poup,0))}`);
+  L.push(`Meses com metas completas: ${linhas.filter(l=>l.d.ok).length} de ${meses.length}`);
+  L.push(`Saldo atual estimado da reserva: ${f2(reservaSaldo())}`);
+  let txt=L.join("\n");
+  /* troca os nomes das pessoas pelos rótulos anônimos em todo o texto (ex.: "Escola Isadora" → "Escola Filho 1") */
+  c.mesadas.forEach((x,k)=>{const n=String(x.nome||"").trim();if(n.length<3)return;const re=new RegExp(n.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[.*+?^${}()|[\]\\]/g,"\\$&").split("").map(ch=>/[a-z]/i.test(ch)?`[${ch.toLowerCase()}${ch.toUpperCase()}]\\p{M}*`:ch).join(""),"gu");
+    txt=txt.normalize("NFD").replace(re,rot[k]).normalize("NFC")});
+  return txt;
+}
+function abrirResumoClaude(){
+  const txt=resumoParaClaude(),dlg=document.createElement("dialog");dlg.className="dlg-res";
+  dlg.innerHTML=`<h2 style="margin:0 0 6px">Resumo para conversar com o Claude</h2>
+    <p class="small muted" style="margin:0 0 10px">Sem nomes de lojas, CPF ou detalhes de holerite: só totais, previsões e metas. Confira o texto antes de copiar.</p>
+    <textarea readonly rows="16" style="width:100%;font:12.5px/1.45 ui-monospace,Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--sunk);color:var(--ink)"></textarea>
+    <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="rcFecha">Fechar</button><button class="btn primary" id="rcCopia">Copiar resumo</button></div>`;
+  document.body.appendChild(dlg);dlg.querySelector("textarea").value=txt;dlg.showModal();
+  const fechar=()=>{dlg.close();dlg.remove()};dlg.querySelector("#rcFecha").onclick=fechar;dlg.addEventListener("cancel",fechar);
+  dlg.querySelector("#rcCopia").onclick=async()=>{const t=dlg.querySelector("textarea");try{await navigator.clipboard.writeText(t.value)}catch{t.select();document.execCommand("copy")}
+    dlg.querySelector("#rcCopia").textContent="✓ Copiado! Agora cole numa conversa com o Claude";setTimeout(fechar,2200)};
+}
+
 function vMetas(){
   const c=metasCfg(),meses=mesesMeta(c),tm=totMesadas(c),pm=Number(c.poupanca)||0,alvo=tm+pm;
   const salvaNoPlano=c.noPlano;c.noPlano=false; /* a sobra é calculada antes das metas */
@@ -969,6 +1018,7 @@ function vMetas(){
     <div><div class="k">Metas completas</div><div class="v">${okMeses} de ${meses.length} meses</div><div class="small muted">${gapAno>0?`faltam ~${brl0(gapMes)}/mês`:"as metas cabem no ano"}</div></div>
   </div>
 
+  <div class="claude-box"><div><b>Quer uma análise mais aprofundada?</b><br><span class="small muted">Copie um resumo anônimo destes números e cole numa conversa com o Claude. Não precisa enviar o Excel.</span></div><button class="btn primary" id="mClaude">Copiar resumo para o Claude</button></div>
   <section class="panel"><div class="panel-h"><h2>Suas metas</h2><span class="small muted">edite à vontade: tudo é recalculado na hora</span></div>
     <div class="metas-cfg">
       <label class="f">De <input type="month" id="mIni" value="${c.inicio}"></label><label class="f">Até <input type="month" id="mFim" value="${c.fim}"></label>
@@ -1003,6 +1053,7 @@ function vMetas(){
   $$("[data-mv]").forEach(i=>i.onchange=()=>{c.mesadas[+i.dataset.mv].valor=Math.max(0,r2(parseBR(i.value)));reg()});
   $$("[data-mx]").forEach(b=>b.onclick=()=>{c.mesadas.splice(+b.dataset.mx,1);reg()});
   $("#mAdd").onclick=()=>{c.mesadas.push({nome:"Nova pessoa",valor:100});reg()};
+  $("#mClaude").onclick=abrirResumoClaude;
 }
 
 let PLANO_ABERTO=null;
