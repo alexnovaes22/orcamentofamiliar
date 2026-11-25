@@ -235,6 +235,21 @@ tr.previsto>td{color:var(--muted);font-style:italic}
 tr.tot>td{border-top:2px solid var(--line);background:var(--sunk)}
 @media (max-width:860px){.side .tabs button span{font-size:.6rem}}
 .claude-box{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(44,90,134,.10),rgba(61,122,79,.10));border-radius:14px;padding:14px 18px;margin-bottom:18px}
+
+/* desejos e carteiras */
+.carts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:12px}
+.cart{text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;display:grid;gap:2px}
+.cart:hover{border-color:var(--blue)}.cart-r{cursor:default;background:var(--sunk)}
+.cart-h{display:flex;justify-content:space-between;align-items:center;gap:8px}.cart-n{font-weight:700}.cart-v{font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums}
+.des{display:grid;grid-template-columns:minmax(0,1fr) 210px auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.des:last-child{border-bottom:0}
+.des-t{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.des-s{display:flex;gap:8px;align-items:center}.des-a{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.reqs{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px}.reqs label{display:flex;gap:5px;align-items:center}
+.form-des{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.form-des input,.form-des select,.form-des textarea{width:100%;box-sizing:border-box}
+.tipos-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 14px}.tipo-l{display:flex;justify-content:space-between;align-items:center;gap:8px}.tipo-l select{width:auto}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{font:inherit;font-size:.88rem;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}.chip:hover{border-color:var(--blue)}
+.ext-h,.ext-m summary{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:8px;padding:6px 4px}.ext-m{border-bottom:1px solid var(--line)}.ext-m summary{cursor:pointer;list-style:none}.ext-m summary::-webkit-details-marker{display:none}.ext-h .num,.ext-m .num{text-align:right}
+details.panel>summary{cursor:pointer}
+@media (max-width:760px){.des{grid-template-columns:1fr}.des-a{justify-content:flex-start}}
 dialog.dlg-res{width:min(760px,94vw);border:0;border-radius:14px;padding:18px;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.3)}dialog.dlg-res::backdrop{background:rgba(10,15,20,.5)}
 .bl-eq{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:4px 0 12px}.bl-eq>div{display:flex;flex-direction:column;background:var(--sunk);border-radius:10px;padding:10px 14px;min-width:150px}.bl-eq b{font-size:1.3rem}.bl-eq .op{font-size:1.5rem;color:var(--muted);font-weight:700}
 .bl-barra{display:flex;height:14px;border-radius:99px;overflow:hidden;background:var(--sunk)}.bl-barra span{display:block;height:100%}
@@ -290,6 +305,7 @@ details.bl-g{border-bottom:1px solid var(--line)}details.bl-g summary{display:gr
       <button data-v="rendas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg><span>Rendas</span></button>
       <button data-v="gastos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/></svg><span>Gastos</span></button>
       <button data-v="plano"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M8 2.5v4M16 2.5v4M3 10h18M7.5 14h3M13.5 14h3M7.5 17.5h3"/></svg><span>Planejamento</span></button>
+      <button data-v="desejos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7h17l-1.6 11.2a2 2 0 0 1-2 1.8H7.1a2 2 0 0 1-2-1.8z"/><path d="M8.5 9V6.5a3.5 3.5 0 0 1 7 0V9"/></svg><span>Desejos</span></button>
       <button data-v="metas"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3"/></svg><span>Metas</span></button>
       <button data-v="backup"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg><span>Backup</span></button>
     </nav>
@@ -482,7 +498,7 @@ async function entrar(){
   $("#login").classList.add("hidden");$("#app").classList.remove("hidden");
   ANO=today.getFullYear();MES=today.getMonth()+1;
   const mig4=migrarV4();S.mes||={};S.fixas||=[];S.cfg||={};S.cfg.fontes||=FONTES_PADRAO.map(f=>({...f}));S.cfg.cnpjFonte||={};
-  const mig5=migrarV5();if(mig4||mig5){save();toast("Seus dados foram organizados no novo formato.")}
+  const mig5=migrarV5(),mig6=migrarMesadas();if(mig6)save();if(mig4||mig5){save();toast("Seus dados foram organizados no novo formato.")}
   $("#view").innerHTML='<p class="muted">Carregando…</p>';
   await restaurarFaturasBackup();await carregarFaturasRecentes();
   VIEW="inicio";render();status("Salvo na nuvem","ok");
@@ -662,7 +678,7 @@ function simMes(f){
 $$(".tabs button").forEach(b=>b.onclick=()=>{VIEW=b.dataset.v;render()});
 $("#y-prev").onclick=()=>{ANO--;render()};
 $("#y-next").onclick=()=>{ANO++;render()};
-const TITULOS={inicio:["Visão geral","como está e como vai ficar"],rendas:["Rendas","holerites, renda complementar e reserva"],gastos:["Gastos","faturas, contas fixas e outros gastos"],plano:["Planejamento","próximos 12 meses, parcelamentos e simulações"],metas:["Metas","poupança, mesadas e o que ajustar para chegar lá"],backup:["Backup e conta","guarde uma cópia dos seus dados"]};
+const TITULOS={inicio:["Visão geral","como está e como vai ficar"],rendas:["Rendas","holerites, renda complementar e reserva"],gastos:["Gastos","faturas, contas fixas e outros gastos"],plano:["Planejamento","próximos 12 meses, parcelamentos e simulações"],desejos:["Desejos e compras","carteiras da família e o que dá para comprar"],metas:["Metas","poupança, mesadas e o que ajustar para chegar lá"],backup:["Backup e conta","guarde uma cópia dos seus dados"]};
 function topo(){
   $$(".tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===VIEW));
   {const t=TITULOS[VIEW]||["",""];$("#pgTitle").textContent=t[0]+((VIEW==="rendas"||VIEW==="gastos")?` · ${Nome(mk())}`:"");$("#pgSub").textContent=t[1];document.title=t[0]+" · Orçamento da Família"}
@@ -670,7 +686,7 @@ function topo(){
   $("#m-btns").innerHTML=MABR.map((n,i)=>{const m=mk(ANO,i+1);return `<button data-mi="${i+1}" class="${mesTemDados(m)?"real":""}" aria-pressed="${i+1===MES}" title="${MESES[i]}">${n}</button>`}).join("");
   $("#m-btns button[aria-pressed=true]")?.scrollIntoView({inline:"center",block:"nearest"});
   $$("#m-btns button").forEach(b=>b.onclick=async()=>{MES=+b.dataset.mi;FAT_FILTRO="";if(VIEW==="inicio"||VIEW==="plano")VIEW="gastos";await fatCarregar(mk());render()});
-  $(".months").classList.toggle("hidden",VIEW==="inicio"||VIEW==="plano"||VIEW==="metas"||VIEW==="backup");
+  $(".months").classList.toggle("hidden",VIEW==="inicio"||VIEW==="plano"||VIEW==="metas"||VIEW==="desejos"||VIEW==="backup");
 }
 let lembreteAdiado=false;
 function lembreteBackup(){
@@ -687,7 +703,7 @@ function mostrarLembrete(){
   el.innerHTML=`<div><span>${esc(msg)}</span><span class="row"><button class="btn sm primary" id="lb-baixar">Baixar Excel agora</button><button class="btn sm" id="lb-depois">Lembrar depois</button></span></div>`;
   $("#lb-baixar").onclick=exportXlsx;$("#lb-depois").onclick=()=>{lembreteAdiado=true;mostrarLembrete()};
 }
-function render(){if(!S)return;charts.forEach(c=>c.destroy());charts=[];topo();mostrarLembrete();({inicio:vInicio,rendas:vRendas,gastos:vGastos,plano:vPlano,metas:vMetas,backup:vBackup})[VIEW]()}
+function render(){if(!S)return;charts.forEach(c=>c.destroy());charts=[];topo();mostrarLembrete();({inicio:vInicio,rendas:vRendas,gastos:vGastos,plano:vPlano,metas:vMetas,desejos:vDesejos,backup:vBackup})[VIEW]()}
 async function carregarFaturasRecentes(){const ms=[];for(let k=-4;k<=1;k++)ms.push(addMes(NOW,k));ms.push(mk());await Promise.all([...new Set(ms)].map(fatCarregar))}
 
 /* ---------- INÍCIO ---------- */
@@ -958,8 +974,11 @@ function vPlanilhaAntiga(){
 /* ================= METAS: poupança e mesadas ================= */
 function metasCfg(){
   return (S.cfg.metas||={inicio:"2027-01",fim:"2027-12",poupanca:1500,prioridade:"mesadas",noPlano:false,
-    mesadas:[{nome:"Alex",valor:200},{nome:"Renata",valor:200},{nome:"Isadora",valor:100},{nome:"Murilo",valor:100}]});
+    mesadas:[{nome:"Alex",valor:300},{nome:"Renata",valor:300},{nome:"Isadora",valor:150},{nome:"Murilo",valor:150}]});
 }
+/* mesadas combinadas em nov/2026: 300 para os adultos e 150 para as crianças (só troca se ainda estiverem nos valores antigos) */
+function migrarMesadas(){const c=S.cfg.metas;if(!c||c.mesadasV2)return false;c.mesadasV2=true;
+  if(c.mesadas.map(x=>x.nome+":"+x.valor).join()==="Alex:200,Renata:200,Isadora:100,Murilo:100")c.mesadas=[{nome:"Alex",valor:300},{nome:"Renata",valor:300},{nome:"Isadora",valor:150},{nome:"Murilo",valor:150}];return true}
 const totMesadas=c=>r2(c.mesadas.reduce((a,x)=>a+(Number(x.valor)||0),0));
 function mesesMeta(c){const out=[];let m=c.inicio;for(let k=0;k<36&&m<=c.fim;k++){out.push(m);m=addMes(m,1)}return out}
 function distribuir(sobra,c){
@@ -1102,6 +1121,339 @@ function vMetas(){
   $$("[data-mx]").forEach(b=>b.onclick=()=>{c.mesadas.splice(+b.dataset.mx,1);reg()});
   $("#mAdd").onclick=()=>{c.mesadas.push({nome:"Nova pessoa",valor:100});reg()};
   $("#mClaude").onclick=abrirResumoClaude;
+}
+
+/* ================= DESEJOS E COMPRAS: carteiras da família ================= */
+const TIPOS_DES={urgente:{n:"Necessidade urgente",r:0,cor:"#A93A36"},necessidade:{n:"Necessidade",r:1,cor:"#2C5A86"},desejo:{n:"Desejo",r:2,cor:"#6E5687"},sonho:{n:"Sonho",r:3,cor:"#B9782A"}};
+const CASA="Casa";
+const normN=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().trim();
+const mMax=(a,b)=>a>b?a:b;
+function cartCfg(){const c=(S.cfg.carteiras||={inicio:addMes(NOW,1),casaPct:10,casaOtimista:false,reservaMin:0,esfriar:300,tipos:{},ajustes:[]});c.tipos||={};c.ajustes||=[];return c}
+const desejos=()=>(S.desejos||=[]);
+const pessoasCart=()=>metasCfg().mesadas.map(x=>x.nome);
+const carteirasNomes=()=>[...pessoasCart(),CASA];
+const mesadaDe=n=>Number((metasCfg().mesadas.find(x=>x.nome===n)||{}).valor)||0;
+/* de quem é cada tipo da fatura: tipo igual ao nome da pessoa vai para a carteira dela; o resto é da família */
+function donoTipo(tipo){const c=cartCfg(),t=normN(tipo);if(!t)return CASA;if(Object.prototype.hasOwnProperty.call(c.tipos,t))return c.tipos[t]&&pessoasCart().includes(c.tipos[t])?c.tipos[t]:CASA;return pessoasCart().find(n=>normN(n)===t)||CASA}
+function mesesCart(){const c=cartCfg(),out=[];let m=c.inicio;const fim=addMes(mMax(NOW,c.inicio),23);for(let k=0;k<60&&m<=fim;k++){out.push(m);m=addMes(m,1)}return out}
+function prevSemMetas(f){const mc=metasCfg(),s=mc.noPlano;mc.noPlano=false;try{return previsao(f)}finally{mc.noPlano=s}}
+const poupMes=m=>{const mc=S.cfg.metas;return mc&&m>=mc.inicio&&m<=mc.fim?Number(mc.poupanca)||0:0};
+const ordemDes=(a,b)=>(TIPOS_DES[a.tipo]?.r??9)-(TIPOS_DES[b.tipo]?.r??9)||(a.ordem??0)-(b.ordem??0)||String(a.criado||"").localeCompare(String(b.criado||""));
+function esfriaAte(d){const c=cartCfg(),lim=Number(c.esfriar)||0;if(!lim||!["desejo","sonho"].includes(d.tipo)||(Number(d.valor)||0)<lim||!d.criado)return null;const t=new Date(new Date(d.criado).getTime()+30*864e5);return t>new Date()?t:null}
+const mesDeData=t=>`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}`;
+
+/* gastos do orçamento de cada mês que podem pertencer a uma pessoa */
+function linhasOrc(m){
+  const L=[];
+  if(m<NOW){(FAT[m]?.itens||[]).forEach(i=>{if(fatEhReemb(i.tipo))return;L.push({desc:i.descricao,cartao:i.cartao,valor:i.valor,t:i.parcela?i.parcela.t:1,n:i.parcela?i.parcela.n:1,tipo:i.tipo||"",m})});
+    ((S.mes[m]||{}).gastos||[]).forEach(g=>{if(g.desejo)L.push({desc:g.desc,valor:g.valor,desejo:g.desejo,m,t:1,n:1})})}
+  else parcelasDetalhe(m).itens.forEach(i=>{if(i.reemb)return;L.push({desc:i.descricao,cartao:i.cartao,valor:i.valor,t:i.t,n:i.n,tipo:i.tipo,m,proj:true})});
+  return L;
+}
+const mesmaLinha=(L,f)=>L.desc===f.desc&&L.cartao===f.cartao&&Math.abs(L.valor-f.valor)<0.01&&L.t===f.t;
+/* compras feitas no cartão: procura a linha correspondente na fatura (mesmo valor da parcela, até 2 meses depois) */
+function vincularCompras(){
+  let mudou=false;const usados=new Set(),k4=(a,b,c,d)=>JSON.stringify([a,b,c,d]);
+  desejos().forEach(d=>{if(d.fat)usados.add(k4(d.fat.desc,d.fat.cartao,d.fat.valor,d.fat.t))});
+  desejos().filter(d=>d.status==="comprado"&&d.pag==="cartao"&&!d.fat).forEach(d=>{
+    const n=d.parcelas||1,parc=r2((d.valorPago??d.valor)/n);let best=null;
+    for(let k=0;k<=2&&!best;k++){const m=addMes(d.mes,k);(FAT[m]?.itens||[]).forEach(i=>{if(best||fatEhReemb(i.tipo))return;const t=i.parcela?i.parcela.t:1;
+      if(t!==n||Math.abs(i.valor-parc)>0.1)return;const key=k4(i.descricao,i.cartao,i.valor,t);if(usados.has(key))return;best={desc:i.descricao,cartao:i.cartao,valor:i.valor,t,mes:m,tipo:i.tipo||""};usados.add(key)})}
+    if(best){d.fat=best;mudou=true}
+  });
+  if(mudou)save();
+}
+
+/* ---------- o cálculo das carteiras ---------- */
+function calcCarteiras(){
+  const c=cartCfg(),meses=mesesCart(),W=carteirasNomes(),E={};W.forEach(w=>E[w]=[]);
+  const add=(w,m,v,desc,tp,extra)=>{if(!E[w]||Math.abs(v)<0.005)return;E[w].push({m:m<c.inicio?c.inicio:m,v:r2(v),desc,tp,...(extra||{})})};
+  const comprados=desejos().filter(d=>d.status==="comprado"),info={};
+  meses.forEach(m=>{
+    const real=m<NOW,p=real?null:prevSemMetas(m);
+    const renda=real?rendasMes(m).liquido:p.R.total,sobra=real?r2(rendasMes(m).liquido-gastosMes(m).total):p.saldo;
+    pessoasCart().forEach(n=>add(n,m,mesadaDe(n),"Mesada","mesada"));
+    let devolve=0;const pess={};
+    linhasOrc(m).forEach(L=>{
+      const d=L.desejo?comprados.find(x=>x.id===L.desejo):comprados.find(x=>x.pag==="cartao"&&x.fat&&mesmaLinha(L,x.fat));
+      if(d){devolve+=L.valor;return} /* já sai direto da carteira do item */
+      const dono=donoTipo(L.tipo);
+      if(dono!==CASA){add(dono,m,-L.valor,`${L.desc}${L.t>1?` (${L.n}/${L.t})`:""}`,"cartao",{proj:!!L.proj,tipo:L.tipo});devolve+=L.valor;pess[dono]=(pess[dono]||0)+L.valor}
+    });
+    const tm=r2(pessoasCart().reduce((a,n)=>a+mesadaDe(n),0)),pp=poupMes(m),meta=r2(renda*(Number(c.casaPct)||0)/100);
+    let casa=r2(sobra-tm-pp+devolve),otim=false;if(!real&&c.casaOtimista&&casa<meta){casa=meta;otim=true}
+    add(CASA,m,casa,otim?"Meta da Casa (projeção otimista)":real?"Sobra do mês":"Sobra prevista","sobra");
+    info[m]={real,renda,sobra,tm,pp,meta,devolve:r2(devolve),casa,otim,pess};
+  });
+  comprados.forEach(d=>{if(d.fonte==="reserva")return;const n=d.parcelas||1,v=r2((d.valorPago??d.valor)/n);
+    for(let k=0;k<n;k++){const m=addMes(d.mes,k);if(m<c.inicio)continue;add(d.carteira,m,-v,`🛒 ${d.item}${n>1?` (${k+1}/${n})`:""}`,"compra")}});
+  c.ajustes.forEach(a=>add(a.carteira,a.mes||c.inicio,Number(a.valor)||0,a.desc||(a.valor<0?"Dívida":"Ajuste"),"ajuste"));
+  const serie={};W.forEach(w=>{let acc=0;serie[w]=meses.map(m=>{acc+=E[w].filter(e=>e.m===m).reduce((a,e)=>a+e.v,0);return r2(acc)})});
+  /* fundo de reserva: saldo de hoje + poupança planejada em Metas */
+  let r=reservaSaldo();const serieR=meses.map(m=>{if(m>=NOW&&!reservaMes(m).aporte)r+=poupMes(m);return r2(r)});
+  const ref=mMax(NOW,c.inicio),iRef=Math.max(0,meses.indexOf(ref));
+  /* fila: cada item, na ordem de prioridade, entra no primeiro mês em que cabe sem deixar a carteira negativa depois */
+  const disp={},sched={};W.forEach(w=>disp[w]=serie[w].slice());const dispR=serieR.slice();
+  const encaixa=(arr,i0,n,v,min)=>{for(let i=Math.max(0,i0);i<meses.length;i++){let ok=true;for(let j=i;j<meses.length;j++){if(arr[j]-v*Math.min(n,j-i+1)<min-0.005){ok=false;break}}if(ok)return i}return -1};
+  desejos().filter(d=>d.status==="planejado").sort(ordemDes).forEach(d=>{
+    let ini=ref;if(d.quando&&d.quando>ini)ini=d.quando;const esf=esfriaAte(d);if(esf&&mesDeData(esf)>ini)ini=mesDeData(esf);
+    const arr=d.fonte==="reserva"?dispR:disp[d.carteira];if(!arr){sched[d.id]={m:null,erro:"carteira inexistente"};return}
+    const min=d.fonte==="reserva"?(Number(c.reservaMin)||0):0,n=Math.max(1,d.parcelas||1),v=r2((Number(d.valor)||0)/n);
+    const i0=meses.indexOf(ini),i=i0<0?-1:encaixa(arr,i0,n,v,min);
+    if(i>=0){for(let j=i;j<meses.length;j++)arr[j]=r2(arr[j]-v*Math.min(n,j-i+1));sched[d.id]={m:meses[i],i,depois:arr[i],ini}}
+    else{const alt=[3,6,10,12].filter(k=>k>n).map(k=>{const j=i0<0?-1:encaixa(arr,i0,k,r2((Number(d.valor)||0)/k),min);return j>=0?{k,m:meses[j]}:null}).find(Boolean);sched[d.id]={m:null,alt,ini}}
+  });
+  return {c,meses,E,serie,serieR,ref,iRef,sched,info,disp,dispR};
+}
+/* primeiro mês (a partir de i) em que o saldo fica positivo e não volta a ficar negativo */
+function positivoEm(arr,meses,i){for(let k=i;k<arr.length;k++){if(arr.slice(k).every(v=>v>=-0.005))return meses[k]}return null}
+function carinhaLim(v,lim,tam){return carinha(v<0?-1:v<lim?100:400,tam)}
+
+/* ---------- tela ---------- */
+let DES_SEL=null;
+async function vDesejos(){
+  const c=cartCfg();
+  await Promise.all(mesesCart().filter(m=>m<=addMes(NOW,1)).concat([addMes(NOW,-1),addMes(NOW,-2)]).map(fatCarregar));
+  vincularCompras();const C=calcCarteiras(),W=carteirasNomes();
+  if(!DES_SEL||!C.meses.includes(DES_SEL))DES_SEL=C.ref;const iS=C.meses.indexOf(DES_SEL);
+  const plan=desejos().filter(d=>d.status==="planejado").sort(ordemDes);
+  const agora=plan.filter(d=>C.sched[d.id]?.m===C.ref),fila=plan.filter(d=>C.sched[d.id]?.m&&C.sched[d.id].m!==C.ref).sort((a,b)=>C.sched[a.id].m.localeCompare(C.sched[b.id].m)||ordemDes(a,b)),nao=plan.filter(d=>!C.sched[d.id]?.m);
+  const ideias=desejos().filter(d=>d.status==="ideia").sort(ordemDes),comp=desejos().filter(d=>d.status==="comprado").sort((a,b)=>String(b.mes).localeCompare(String(a.mes))),desist=desejos().filter(d=>d.status==="desistiu");
+  const mediaCasa=r2(C.meses.slice(C.iRef,C.iRef+12).reduce((a,m)=>a+C.info[m].casa,0)/Math.max(1,Math.min(12,C.meses.length-C.iRef)));
+  const metaCasa=r2(C.meses.slice(C.iRef,C.iRef+12).reduce((a,m)=>a+C.info[m].meta,0)/Math.max(1,Math.min(12,C.meses.length-C.iRef)));
+  const lim=w=>w===CASA?Math.max(300,metaCasa):Math.max(1,mesadaDe(w));
+  const cardW=w=>{const s=C.serie[w][iS],pos=s<0?positivoEm(C.serie[w],C.meses,iS):null,comprom=r2(s-C.disp[w][iS]);
+    return `<button class="cart" data-ext="${esc(w)}" aria-label="Extrato da carteira ${esc(w)}"><div class="cart-h"><span class="cart-n">${w===CASA?"🏠 ":""}${esc(w)}</span>${carinhaLim(s,lim(w),26)}</div>
+      <div class="cart-v" style="color:${s<0?"var(--red)":"var(--ink)"}">${brl(s)}</div>
+      <div class="small muted">${w===CASA?`entra ~${brl0(mediaCasa)}/mês`:`mesada ${brl0(mesadaDe(w))}/mês`}</div>
+      ${s<0?`<div class="small" style="color:var(--red)">${pos?`fica positivo em ${nomeMes(pos)}`:"continua negativo em 24 meses"}</div>`:comprom>0.005?`<div class="small" style="color:#8a5a14">${brl0(comprom)} já reservado para a fila</div>`:'<div class="small muted">&nbsp;</div>'}</button>`};
+  const R0=C.serieR[iS];
+  /* dicas */
+  const dicas=[];
+  pessoasCart().forEach(w=>{const s=C.serie[w][C.iRef];if(s<0){const pos=positivoEm(C.serie[w],C.meses,C.iRef);const parc=C.E[w].filter(e=>e.tp==="cartao"&&e.m>C.ref).reduce((a,e)=>a+(-e.v),0);
+    dicas.push({ic:"⏳",t:`${w} está com ${brl(s)} na carteira${pos?` e fica positivo em ${nomeMes(pos)}`:""}`,d:`As compras no cartão com o tipo ${normN(w)} saem da carteira dele(a). Ainda há ${brl0(parc)} em parcelas previstas nos próximos meses. Até ficar positivo, os itens de ${w} esperam.`})}});
+  if(mediaCasa<metaCasa)dicas.push({ic:"🏠",t:`A Casa deve receber cerca de ${brl0(mediaCasa)}/mês, abaixo da meta de ${c.casaPct}% da renda (${brl0(metaCasa)}/mês)`,d:`Faltam ~${brl0(metaCasa-mediaCasa)}/mês. As sugestões de corte da tela Metas ajudam a chegar lá. Para ver as datas como se a meta fosse cumprida, ligue a “projeção otimista” nas configurações.`});
+  else dicas.push({ic:"🏠",t:`A Casa deve receber cerca de ${brl0(mediaCasa)}/mês: a meta de ${c.casaPct}% da renda (${brl0(metaCasa)}) está sendo cumprida`,d:"Bom sinal. Mantenha a ordem da fila para não espalhar o dinheiro em várias compras ao mesmo tempo."});
+  const req=plan.filter(d=>(d.req||[]).some(r=>!r.ok));if(req.length)dicas.push({ic:"📋",t:`${req.length} item(ns) com providências pendentes`,d:req.map(d=>`${d.item}: ${(d.req||[]).filter(r=>!r.ok).map(r=>r.t).join(", ")}`).join(" · ")});
+  const grandesCasa=plan.filter(d=>d.carteira===CASA&&d.fonte!=="reserva"&&(Number(d.valor)||0)>=2000);if(grandesCasa.length>1)dicas.push({ic:"🎯",t:"Uma compra grande por vez",d:`Há ${grandesCasa.length} itens grandes da Casa na fila. Juntar para um de cada vez faz cada um chegar mais cedo.`});
+  if(nao.some(d=>C.sched[d.id]?.alt))dicas.push({ic:"💳",t:"Parcelar é a última opção",d:"Alguns itens só cabem parcelados. Lembre que cada parcela ocupa a carteira por vários meses e atrasa os próximos itens da fila."});
+
+  $("#view").innerHTML=`
+  <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+    <label class="f" style="min-width:200px">Saldos em <select id="dsMes">${C.meses.slice(0,18).map(m=>`<option value="${m}" ${m===DES_SEL?"selected":""}>${Nome(m)}${m===C.ref?(C.ref===NOW?" (agora)":" (início)"):""}</option>`).join("")}</select></label>
+    <div class="row"><button class="btn" id="dsImg">📤 Imagem para a família</button><button class="btn" id="dsIdeias">💡 Ideias</button><button class="btn primary" id="dsNovo">+ Novo item</button></div></div>
+  <div class="carts">${W.map(cardW).join("")}
+    <div class="cart cart-r"><div class="cart-h"><span class="cart-n">🛟 Fundo de reserva</span></div><div class="cart-v">${brl(R0)}</div><div class="small muted">${Number(c.reservaMin)?`mínimo ${brl0(c.reservaMin)}`:"defina um mínimo nas configurações"}</div><div class="small muted">atualize em Rendas → Reserva</div></div></div>
+  <p class="small muted" style="margin:-4px 0 14px">Toque numa carteira para ver o extrato. Os saldos somam as mesadas, descontam as compras no cartão com o tipo da pessoa (ex.: ${esc(normN(pessoasCart()[0]||"ALEX"))}) e os itens comprados. A Casa recebe tudo o que sobra do mês.</p>
+
+  ${secaoDes("✅ Dá para comprar agora",agora,C,"Nada liberado ainda neste mês.")}
+  ${secaoDes("⏳ Na fila",fila,C,"")}
+  ${secaoDes("🔴 Ainda não cabe nos próximos 24 meses",nao,C,"")}
+  ${!plan.length?`<section class="panel"><p>Nenhum item na lista ainda. Use <b>+ Novo item</b> ou veja as <b>💡 Ideias</b>.</p></section>`:""}
+  ${ideias.length?secaoDes("💡 Ideias (ainda fora da fila)",ideias,C,""):""}
+
+  <section class="panel"><h2 style="margin-bottom:10px">Dicas</h2>${dicas.map(r=>`<div class="rec"><div class="rec-ic" aria-hidden="true">${r.ic}</div><div><b>${esc(r.t)}</b><div class="small">${esc(r.d)}</div></div></div>`).join("")}</section>
+  ${comp.length?`<details class="panel"><summary><b>🛒 Comprados (${comp.length})</b></summary>${comp.map(d=>itemDes(d,C)).join("")}</details>`:""}
+  ${desist.length?`<details class="panel"><summary><b>Desistimos (${desist.length})</b></summary>${desist.map(d=>itemDes(d,C)).join("")}</details>`:""}
+  ${painelCfgCart(C)}`;
+  ligarDesejos(C);
+}
+function secaoDes(tit,lista,C,vazio){if(!lista.length&&!vazio)return "";return `<section class="panel"><h2 style="margin-bottom:8px">${tit} <span class="small muted">${lista.length||""}</span></h2>${lista.map(d=>itemDes(d,C)).join("")||`<p class="small muted">${vazio}</p>`}</section>`}
+function itemDes(d,C){
+  const T=TIPOS_DES[d.tipo]||TIPOS_DES.desejo,n=d.parcelas||1,v=Number(d.valor)||0,sc=C.sched[d.id],reqP=(d.req||[]).filter(r=>!r.ok),esf=d.status==="planejado"?esfriaAte(d):null;
+  let st="";
+  if(d.status==="planejado"){
+    if(sc&&sc.m){const dist=C.meses.indexOf(sc.m)-C.iRef,atr=d.quando&&sc.m>d.quando?C.meses.indexOf(sc.m)-C.meses.indexOf(d.quando):0;
+      st=sc.m===C.ref?`${carinha(400,22)}<div><b style="color:var(--green)">Dá agora</b><div class="small muted">${d.fonte==="reserva"?"reserva":esc(d.carteira)} fica com ${brl0(sc.depois)}</div></div>`
+        :`${carinha(100,22)}<div><b>${Nome(sc.m)}</b><div class="small muted">em ${dist} ${dist===1?"mês":"meses"}${atr>0?` · ${atr} depois do desejado`:""}</div></div>`}
+    else st=`${carinha(-1,22)}<div><b style="color:var(--red)">Não cabe</b><div class="small muted">${sc&&sc.alt?`em ${sc.alt.k}x de ${brl0(v/sc.alt.k)} caberia em ${nomeMes(sc.alt.m)}`:"nem parcelado, por enquanto"}</div></div>`;
+  }else if(d.status==="comprado")st=`<div><b style="color:var(--green)">Comprado</b><div class="small muted">${nomeMes(d.mes)} · ${brl(d.valorPago??v)}${(d.parcelas||1)>1?` em ${d.parcelas}x`:""}</div>${d.pag==="cartao"?`<div class="small ${d.fat?"":"muted"}">${d.fat?`✓ na fatura de ${nomeMes(d.fat.mes)} (${esc(d.fat.desc)})`:"aguardando a fatura"}</div>`:`<div class="small muted">${d.pag==="pix"?"Pix/dinheiro":""}</div>`}</div>`;
+  else if(d.status==="ideia")st=`<div class="small muted">ideia</div>`;
+  else st=`<div class="small muted">desistimos</div>`;
+  return `<div class="des" data-id="${d.id}">
+    <div class="des-m"><div class="des-t"><b>${esc(d.item)}</b> <span class="pill" style="color:${T.cor};border-color:${T.cor}">${T.n}</span> <span class="pill">${d.carteira===CASA?"🏠 Casa":esc(d.carteira)}</span></div>
+      <div class="small muted">${brl(v)}${n>1?` · ${n}x de ${brl(v/n)}`:""} · ${d.fonte==="reserva"?"fundo de reserva":"carteira"} · ${d.quando?"para "+nomeMes(d.quando):"quando possível"}</div>
+      ${esf?`<div class="small" style="color:#8a5a14">⏸ Esfriando até ${esf.toLocaleDateString("pt-BR")} (regra dos 30 dias para desejos acima de ${brl0(cartCfg().esfriar)})</div>`:""}
+      ${(d.req||[]).length&&d.status!=="comprado"?`<div class="reqs">${d.req.map((r,k)=>`<label class="small"><input type="checkbox" data-req="${d.id}|${k}" ${r.ok?"checked":""}> ${esc(r.t)}</label>`).join("")}</div>`:""}
+      ${reqP.length&&d.status==="planejado"?`<div class="small" style="color:#8a5a14">Antes de comprar: falta ${reqP.length} providência(s)</div>`:""}
+      ${d.obs?`<div class="small">${esc(d.obs)}</div>`:""}${/^https?:\/\//.test(d.link||"")?`<a class="small" href="${esc(d.link)}" target="_blank" rel="noopener">ver produto ↗</a>`:""}</div>
+    <div class="des-s">${st}</div>
+    <div class="des-a">${d.status==="planejado"?`<button class="btn sm primary" data-comprei="${d.id}">Comprei</button><button class="btn sm" data-up="${d.id}" aria-label="Subir prioridade">↑</button><button class="btn sm" data-dn="${d.id}" aria-label="Descer prioridade">↓</button>`:""}
+      ${d.status==="ideia"?`<button class="btn sm primary" data-plan="${d.id}">Colocar na fila</button>`:""}
+      ${d.status==="comprado"?`<button class="btn sm" data-desf="${d.id}">Desfazer compra</button>${d.fat?`<button class="btn sm" data-desv="${d.id}" title="Use se o sistema ligou a compra à linha errada da fatura">Não é esta linha</button>`:""}`:""}
+      ${d.status==="desistiu"?`<button class="btn sm" data-plan="${d.id}">Voltar para a fila</button>`:""}
+      <button class="btn sm" data-ed="${d.id}">Editar</button></div></div>`;
+}
+function painelCfgCart(C){
+  const c=C.c,mc=metasCfg(),orig={};Object.values(FAT).forEach(F=>(F&&F.itens||[]).forEach(i=>{const t=normN(i.tipo);if(t&&!fatEhReemb(i.tipo))orig[t]||=String(i.tipo).trim()}));const tipos=Object.keys(orig).sort();
+  return `<details class="panel" id="dsCfg"><summary><b>⚙️ Configurações das carteiras</b></summary>
+    <div class="metas-cfg" style="margin-top:12px">
+      <label class="f">Começa em <input type="month" id="ccIni" value="${c.inicio}"></label>
+      <label class="f">Meta da Casa (% da renda) <input class="v" inputmode="decimal" id="ccPct" value="${nf.format(Number(c.casaPct)||0)}" style="width:90px"></label>
+      <label class="f">Reserva mínima <input class="v" inputmode="decimal" id="ccRmin" value="${nf.format(Number(c.reservaMin)||0)}"></label>
+      <label class="f">Regra dos 30 dias a partir de <input class="v" inputmode="decimal" id="ccEsf" value="${nf.format(Number(c.esfriar)||0)}"></label>
+    </div>
+    <label class="small" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="ccOtim" ${c.casaOtimista?"checked":""}> Projeção otimista: nos meses futuros, considerar que a Casa recebe pelo menos a meta (mesmo que a previsão de sobra seja menor)</label>
+    <h3 style="margin:16px 0 6px">Mesadas</h3><p class="small muted" style="margin:0 0 6px">Os mesmos valores da tela Metas. Entram na carteira todo mês.</p>
+    <div class="pessoas">${mc.mesadas.map((x,k)=>`<div class="pessoa"><input type="text" data-cn="${k}" value="${esc(x.nome)}" aria-label="Nome"><input class="v" inputmode="decimal" data-cv="${k}" value="${nf.format(x.valor)}" aria-label="Mesada de ${esc(x.nome)}"></div>`).join("")}</div>
+    <h3 style="margin:16px 0 6px">De quem é cada tipo da fatura</h3><p class="small muted" style="margin:0 0 6px">Compras no cartão com estes tipos saem da carteira da pessoa (e voltam para a Casa, porque não são gasto da família). O resto é gasto da família.</p>
+    <div class="tipos-g">${tipos.map(t=>{const d=donoTipo(t);return `<label class="small tipo-l"><span>${esc(orig[t])}</span><select data-tp="${esc(t)}">${["",...pessoasCart()].map(p=>`<option value="${esc(p)}" ${(p||CASA)===d?"selected":""}>${p?esc(p):"Família / Casa"}</option>`).join("")}</select></label>`}).join("")||'<span class="small muted">Importe uma fatura para ver os tipos.</span>'}</div>
+    <h3 style="margin:16px 0 6px">Ajustes e saldos iniciais</h3><p class="small muted" style="margin:0 0 6px">Use para dívidas que não estão no cartão (valor negativo) ou para começar com um saldo.</p>
+    ${c.ajustes.map(a=>`<div class="lin"><span>${esc(a.carteira)} · ${nomeMes(a.mes||c.inicio)} · ${esc(a.desc||"")}</span><span class="num ${a.valor<0?"neg":"pos"}">${brl(a.valor)}</span><button class="btn sm" data-ajx="${a.id}" aria-label="Remover ajuste">×</button></div>`).join("")}
+    <div class="row" style="margin-top:8px"><select id="ajC" style="width:auto">${carteirasNomes().map(w=>`<option>${esc(w)}</option>`).join("")}</select><input type="month" id="ajM" value="${c.inicio}" style="width:auto"><input type="text" id="ajD" placeholder="Descrição (ex.: dívida com a Renata)" style="flex:2;min-width:160px"><input class="v" inputmode="decimal" id="ajV" placeholder="−150,00"><button class="btn" id="ajAdd">Adicionar</button></div>
+  </details>`;
+}
+function ligarDesejos(C){
+  const c=C.c,reg=()=>{save();const y=scrollY;vDesejos().then(()=>scrollTo(0,y))},acha=id=>desejos().find(d=>d.id===id);
+  $("#dsMes").onchange=e=>{DES_SEL=e.target.value;const y=scrollY;vDesejos().then(()=>scrollTo(0,y))};
+  $("#dsNovo").onclick=()=>editarDesejo(null);
+  $("#dsIdeias").onclick=abrirIdeias;
+  $("#dsImg").onclick=()=>imagemFamilia(C);
+  $$("[data-ext]").forEach(b=>b.onclick=()=>extratoCarteira(b.dataset.ext,C));
+  $$("[data-ed]").forEach(b=>b.onclick=()=>editarDesejo(acha(b.dataset.ed)));
+  $$("[data-comprei]").forEach(b=>b.onclick=()=>comprei(acha(b.dataset.comprei),C));
+  $$("[data-plan]").forEach(b=>b.onclick=()=>{const d=acha(b.dataset.plan);d.status="planejado";reg()});
+  $$("[data-desf]").forEach(b=>b.onclick=()=>{const d=acha(b.dataset.desf);if(!confirm(`Desfazer a compra de “${d.item}”? Ele volta para a fila.`))return;desfazerCompra(d);reg()});
+  $$("[data-desv]").forEach(b=>b.onclick=()=>{const d=acha(b.dataset.desv);d.fat=null;d.semVinculo=true;d.pag="pix";reg();toast("Compra desvinculada da fatura: o valor sai direto da carteira.")});
+  $$("[data-req]").forEach(i=>i.onchange=()=>{const [id,k]=i.dataset.req.split("|");acha(id).req[+k].ok=i.checked;reg()});
+  const mover=(id,dir)=>{const lista=desejos().filter(d=>d.status==="planejado").sort(ordemDes),i=lista.findIndex(d=>d.id===id),j=i+dir;if(j<0||j>=lista.length)return;
+    const a=lista[i],b=lista[j];if(a.tipo!==b.tipo){toast("Para passar à frente de outro tipo, mude o tipo do item (urgente, necessidade, desejo ou sonho).");return}
+    lista.forEach((d,k)=>d.ordem=k);[a.ordem,b.ordem]=[b.ordem,a.ordem];reg()};
+  $$("[data-up]").forEach(b=>b.onclick=()=>mover(b.dataset.up,-1));
+  $$("[data-dn]").forEach(b=>b.onclick=()=>mover(b.dataset.dn,1));
+  /* configurações */
+  const abrir=()=>{const d=$("#dsCfg");if(d)d.open=true};
+  $("#ccIni").onchange=e=>{if(e.target.value){c.inicio=e.target.value;reg();setTimeout(abrir,50)}};
+  $("#ccPct").onchange=e=>{c.casaPct=Math.max(0,Math.min(100,parseBR(e.target.value)));reg();setTimeout(abrir,50)};
+  $("#ccRmin").onchange=e=>{c.reservaMin=Math.max(0,r2(parseBR(e.target.value)));reg();setTimeout(abrir,50)};
+  $("#ccEsf").onchange=e=>{c.esfriar=Math.max(0,r2(parseBR(e.target.value)));reg();setTimeout(abrir,50)};
+  $("#ccOtim").onchange=e=>{c.casaOtimista=e.target.checked;reg();setTimeout(abrir,50)};
+  $$("[data-cn]").forEach(i=>i.onchange=()=>{const mc=metasCfg(),k=+i.dataset.cn,velho=mc.mesadas[k].nome,novo=i.value.trim()||velho;mc.mesadas[k].nome=novo;
+    desejos().forEach(d=>{if(d.carteira===velho)d.carteira=novo});c.ajustes.forEach(a=>{if(a.carteira===velho)a.carteira=novo});Object.keys(c.tipos).forEach(t=>{if(c.tipos[t]===velho)c.tipos[t]=novo});reg();setTimeout(abrir,50)});
+  $$("[data-cv]").forEach(i=>i.onchange=()=>{metasCfg().mesadas[+i.dataset.cv].valor=Math.max(0,r2(parseBR(i.value)));reg();setTimeout(abrir,50)});
+  $$("[data-tp]").forEach(s=>s.onchange=()=>{c.tipos[s.dataset.tp]=s.value;reg();setTimeout(abrir,50)});
+  $$("[data-ajx]").forEach(b=>b.onclick=()=>{c.ajustes=c.ajustes.filter(a=>a.id!==b.dataset.ajx);reg();setTimeout(abrir,50)});
+  $("#ajAdd").onclick=()=>{const v=r2(parseBR($("#ajV").value.replace("−","-")));if(!v)return;c.ajustes.push({id:uid4(),carteira:$("#ajC").value,mes:$("#ajM").value||c.inicio,desc:$("#ajD").value.trim(),valor:v});reg();setTimeout(abrir,50)};
+}
+function desfazerCompra(d){
+  Object.values(S.mes).forEach(M=>{if(M.gastos)M.gastos=M.gastos.filter(g=>g.desejo!==d.id);if(M.reserva)M.reserva=M.reserva.filter(x=>x.desejo!==d.id)});
+  d.status="planejado";delete d.fat;delete d.semVinculo;delete d.mes;delete d.valorPago;delete d.pag;
+}
+/* ---------- diálogos ---------- */
+function dlgBase(html,cls){const dlg=document.createElement("dialog");dlg.className="dlg-res "+(cls||"");dlg.innerHTML=html;document.body.appendChild(dlg);dlg.showModal();const fechar=()=>{dlg.close();dlg.remove()};dlg.addEventListener("cancel",fechar);return {dlg,fechar}}
+function editarDesejo(d,pre){
+  const novo=!d;d=d||{id:uid4(),item:"",carteira:CASA,valor:0,tipo:"necessidade",quando:"",fonte:"carteira",parcelas:1,req:[],obs:"",link:"",status:"planejado",criado:new Date().toISOString(),ordem:desejos().length,...(pre||{})};
+  const {dlg,fechar}=dlgBase(`<h2 style="margin:0 0 10px">${novo?"Novo item":"Editar item"}</h2>
+    <div class="form-des">
+      <label class="f" style="grid-column:1/-1">O que é <input type="text" id="deI" value="${esc(d.item)}" placeholder="Ex.: marmiteira térmica"></label>
+      <label class="f">Para quem (carteira) <select id="deC">${carteirasNomes().map(w=>`<option ${w===d.carteira?"selected":""}>${esc(w)}</option>`).join("")}</select></label>
+      <label class="f">Valor estimado <input class="v" inputmode="decimal" id="deV" value="${d.valor?nf.format(d.valor):""}" placeholder="0,00"></label>
+      <label class="f">Tipo <select id="deT">${Object.entries(TIPOS_DES).map(([k,t])=>`<option value="${k}" ${k===d.tipo?"selected":""}>${t.n}</option>`).join("")}</select></label>
+      <label class="f">Quando <select id="deQ"><option value="">Assim que possível</option><option value="m" ${d.quando?"selected":""}>A partir de um mês…</option></select></label>
+      <label class="f" id="deQmL" ${d.quando?"":"hidden"}>Mês <input type="month" id="deQm" value="${d.quando||addMes(NOW,1)}"></label>
+      <label class="f">De onde vem o dinheiro <select id="deF"><option value="carteira">Da carteira</option><option value="reserva" ${d.fonte==="reserva"?"selected":""}>Do fundo de reserva</option></select></label>
+      <label class="f">Parcelas <select id="deP">${[1,2,3,4,5,6,8,10,12,18,24].map(n=>`<option value="${n}" ${n===(d.parcelas||1)?"selected":""}>${n===1?"à vista":n+"x"}</option>`).join("")}</select></label>
+      <label class="f">Situação <select id="deS"><option value="planejado">Na fila</option><option value="ideia" ${d.status==="ideia"?"selected":""}>Só uma ideia (fora da fila)</option>${novo?"":`<option value="desistiu" ${d.status==="desistiu"?"selected":""}>Desistimos</option>${d.status==="comprado"?'<option value="comprado" selected>Comprado</option>':""}`}</select></label>
+      <label class="f" style="grid-column:1/-1">O que é preciso antes de comprar (um por linha) <textarea id="deR" rows="3" placeholder="Ex.: orçamento do eletricista&#10;trocar o disjuntor">${esc((d.req||[]).map(r=>r.t).join("\n"))}</textarea></label>
+      <label class="f" style="grid-column:1/-1">Link do produto (opcional) <input type="url" id="deL" value="${esc(d.link||"")}" placeholder="https://"></label>
+      <label class="f" style="grid-column:1/-1">Observações <textarea id="deO" rows="2">${esc(d.obs||"")}</textarea></label>
+    </div>
+    <p class="small muted" id="deDica"></p>
+    <div class="row" style="justify-content:space-between;margin-top:10px">${novo?"<span></span>":'<button class="btn" id="deX" style="color:var(--red)">Excluir</button>'}<span class="row"><button class="btn" id="deCan">Cancelar</button><button class="btn primary" id="deOk">Salvar</button></span></div>`);
+  const q=s=>dlg.querySelector(s);
+  const dica=()=>{const t=q("#deT").value,v=parseBR(q("#deV").value),lim=Number(cartCfg().esfriar)||0;q("#deDica").textContent=(t==="desejo"||t==="sonho")&&lim&&v>=lim?`Desejos a partir de ${brl0(lim)} esperam 30 dias antes de liberar. Muita vontade passa nesse tempo.`:q("#deF").value==="reserva"?"O fundo de reserva é para emergências: use para necessidades da casa e respeite o mínimo definido nas configurações.":""};
+  q("#deQ").onchange=()=>{q("#deQmL").hidden=!q("#deQ").value;};["#deT","#deV","#deF"].forEach(s=>q(s).addEventListener("change",dica));dica();
+  q("#deCan").onclick=fechar;
+  if(q("#deX"))q("#deX").onclick=()=>{if(!confirm(`Excluir “${d.item}”?`))return;if(d.status==="comprado")desfazerCompra(d);S.desejos=desejos().filter(x=>x.id!==d.id);fechar();save();vDesejos()};
+  q("#deOk").onclick=()=>{
+    const item=q("#deI").value.trim();if(!item){q("#deI").focus();return}
+    const antigos=d.req||[];d.item=item;d.carteira=q("#deC").value;d.valor=r2(parseBR(q("#deV").value));d.tipo=q("#deT").value;d.quando=q("#deQ").value?q("#deQm").value:"";d.fonte=q("#deF").value;d.parcelas=+q("#deP").value;
+    d.req=q("#deR").value.split("\n").map(s=>s.trim()).filter(Boolean).map(t=>({t,ok:!!(antigos.find(r=>r.t===t)||{}).ok}));d.link=q("#deL").value.trim();d.obs=q("#deO").value.trim();
+    const st=q("#deS").value;if(st!==d.status&&d.status==="comprado")desfazerCompra(d);d.status=st;
+    if(novo)desejos().push(d);fechar();save();vDesejos();toast(novo?"Item incluído":"Item salvo");
+  };
+  setTimeout(()=>q("#deI").focus(),30);
+}
+function comprei(d,C){
+  const {dlg,fechar}=dlgBase(`<h2 style="margin:0 0 6px">Comprei: ${esc(d.item)}</h2>
+    <div class="form-des">
+      <label class="f">Mês da compra <input type="month" id="cpM" value="${NOW}"></label>
+      <label class="f">Valor pago (total) <input class="v" inputmode="decimal" id="cpV" value="${nf.format(Number(d.valor)||0)}"></label>
+      <label class="f">Como pagou <select id="cpG"><option value="cartao">Cartão de crédito</option><option value="pix">Pix, débito ou dinheiro</option></select></label>
+      <label class="f" id="cpPL">Parcelas <select id="cpP">${[1,2,3,4,5,6,8,10,12,18,24].map(n=>`<option value="${n}" ${n===(d.parcelas||1)?"selected":""}>${n===1?"à vista":n+"x"}</option>`).join("")}</select></label>
+    </div>
+    <label class="small" id="cpOL" style="display:flex;gap:8px;margin-top:8px" hidden><input type="checkbox" id="cpO" checked> Lançar também em <b>Outros gastos</b> do mês</label>
+    ${d.fonte==="reserva"?'<label class="small" style="display:flex;gap:8px;margin-top:8px"><input type="checkbox" id="cpR" checked> Registrar a retirada do fundo de reserva (Rendas → Reserva)</label>':""}
+    <p class="small muted" id="cpTx"></p>
+    <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="cpCan">Cancelar</button><button class="btn primary" id="cpOk">Confirmar compra</button></div>`);
+  const q=s=>dlg.querySelector(s);
+  const tx=()=>{const cart=q("#cpG").value==="cartao";q("#cpOL").hidden=cart;q("#cpPL").hidden=!cart;
+    q("#cpTx").textContent=cart?`O valor sai da carteira ${d.fonte==="reserva"?"do fundo de reserva":"“"+d.carteira+"”"} a partir do mês da compra. Quando a fatura for importada, o sistema reconhece a linha pelo valor da parcela e não desconta duas vezes.`:`O valor sai da carteira ${d.fonte==="reserva"?"do fundo de reserva":"“"+d.carteira+"”"} no mês da compra.`};
+  q("#cpG").onchange=tx;tx();q("#cpCan").onclick=fechar;
+  q("#cpOk").onclick=()=>{
+    const m=q("#cpM").value||NOW,v=r2(parseBR(q("#cpV").value))||Number(d.valor)||0,pag=q("#cpG").value,n=pag==="cartao"?+q("#cpP").value:1;
+    d.status="comprado";d.mes=m;d.valorPago=v;d.pag=pag;d.parcelas=n;delete d.fat;delete d.semVinculo;
+    if(pag==="pix"&&q("#cpO").checked)(MM(m).gastos||=[]).push({id:uid4(),desc:`Compra: ${d.item}`,cat:d.carteira===CASA?"Casa e decoração":"Pessoais",valor:v,desejo:d.id});
+    if(d.fonte==="reserva"&&q("#cpR")&&q("#cpR").checked)(MM(m).reserva||=[]).push({id:uid4(),tipo:"resgate",desc:`Compra: ${d.item}`,valor:v,desejo:d.id});
+    (d.req||[]).forEach(r=>r.ok=true);fechar();save();vDesejos();toast("Compra registrada 🛒");
+  };
+}
+function extratoCarteira(w,C){
+  const meses=C.meses.slice(0,Math.min(C.meses.length,C.iRef+13)),E=C.E[w]||[];
+  const linhas=meses.map((m,i)=>{const es=E.filter(e=>e.m===m),ent=es.filter(e=>e.v>0).reduce((a,e)=>a+e.v,0),sai=es.filter(e=>e.v<0).reduce((a,e)=>a+e.v,0),I=C.info[m];
+    const casaDet=w===CASA&&I?`<div class="small muted" style="padding:4px 0 6px">${I.real?"Sobra do mês":"Sobra prevista"} ${brl(I.sobra)} − mesadas ${brl(I.tm)}${I.pp?` − poupança (Metas) ${brl(I.pp)}`:""}${I.devolve?` + gastos que são das pessoas ${brl(I.devolve)}`:""} = <b>${brl(I.casa)}</b>${I.otim?" (meta, projeção otimista)":""} · meta ${brl0(I.meta)}</div>`:"";
+    return `<details class="ext-m"><summary><span>${Nome(m)}${I&&!I.real?' <span class="pill">previsto</span>':""}</span><span class="num pos">${ent?"+"+brl(ent):""}</span><span class="num neg">${sai?brl(sai):""}</span><b class="num" style="color:${C.serie[w][i]<0?"var(--red)":"var(--ink)"}">${brl(C.serie[w][i])}</b></summary>${casaDet}${es.filter(e=>w!==CASA||e.tp!=="sobra").map(e=>`<div class="det-l small"><span>${esc(e.desc)}${e.proj?' <span class="muted">· parcela prevista</span>':""}</span><span class="num ${e.v<0?"neg":"pos"}">${brl(e.v)}</span></div>`).join("")}</details>`}).join("");
+  const {dlg,fechar}=dlgBase(`<h2 style="margin:0 0 4px">Extrato: ${w===CASA?"🏠 Casa":esc(w)}</h2><p class="small muted" style="margin:0 0 10px">Toque no mês para ver os lançamentos. Os meses futuros são previsão.</p>
+    <div class="ext-h small muted"><span>Mês</span><span class="num">Entradas</span><span class="num">Saídas</span><span class="num">Saldo</span></div>${linhas}
+    <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn primary" id="exF">Fechar</button></div>`);
+  dlg.querySelector("#exF").onclick=fechar;
+}
+const IDEIAS=[
+  ["🏠 Casa",[["Infraestrutura elétrica para ar-condicionado",10000,"necessidade","Casa",["orçamento do eletricista","verificar o padrão de energia"]],["Ar-condicionado inverter (economiza na conta de luz)",3000,"desejo","Casa"],["Lâmpadas LED na casa toda",250,"necessidade","Casa"],["Filtro de água (no lugar do galão)",400,"necessidade","Casa"],["Kit básico de ferramentas",300,"necessidade","Casa"],["Cortinas blackout nos quartos",400,"desejo","Casa"],["Organizadores para armários",200,"desejo","Casa"],["Câmera ou fechadura de segurança",500,"necessidade","Casa"]]],
+  ["👨‍👩‍👧‍👦 Família",[["Passeio do mês em família",200,"desejo","Casa"],["Viagem de férias",5000,"sonho","Casa",["definir destino","pesquisar preços com antecedência"]],["Jogo de tabuleiro para a família",150,"desejo","Casa"],["Fundo para presentes de aniversário",300,"necessidade","Casa"],["Material escolar do próximo ano",800,"necessidade","Casa",["lista da escola"]]]],
+  ["🧍 Pessoais",[["Marmiteira térmica",60,"necessidade",null],["Garrafa térmica",80,"desejo",null],["Ferro de passar",150,"necessidade",null],["Fone de ouvido",150,"desejo",null],["Tênis para caminhada",300,"desejo",null],["Curso online",200,"desejo",null],["Livros",80,"desejo",null]]],
+  ["💡 Que economizam depois",[["Chuveiro ou aquecedor mais econômico",350,"necessidade","Casa"],["Panela de pressão elétrica (comida em casa)",400,"desejo","Casa"],["Bicicleta para trajetos curtos",900,"sonho",null],["Tomadas com timer (evitar stand-by)",120,"desejo","Casa"]]]];
+function abrirIdeias(){
+  const {dlg,fechar}=dlgBase(`<h2 style="margin:0 0 4px">💡 Ideias</h2><p class="small muted" style="margin:0 0 10px">Toque numa ideia para abrir o cadastro já preenchido. Ajuste o valor e a carteira antes de salvar.</p>
+    ${IDEIAS.map(([g,its],gi)=>`<h3 style="margin:12px 0 6px">${g}</h3><div class="chips">${its.map((x,k)=>`<button class="chip" data-id="${gi}|${k}">${esc(x[0])} <span class="muted">~${brl0(x[1])}</span></button>`).join("")}</div>`).join("")}
+    <h3 style="margin:16px 0 6px">Ideias para usar as carteiras em família</h3>
+    <ul class="small" style="margin:0;padding-left:18px;line-height:1.6"><li><b>Reunião do mês (15 min):</b> mostrar a imagem das carteiras e decidir juntos o que entra na fila.</li><li><b>Voto da família</b> nos itens da Casa: em caso de empate, ganha o mais votado.</li><li><b>Bônus de economia:</b> se a Casa fechar o mês acima da meta, parte da diferença vira crédito extra nas carteiras.</li><li><b>Meta visível para as crianças:</b> combinar um item e acompanhar mês a mês quanto falta.</li><li><b>Regra dos 30 dias:</b> desejo caro espera um mês na lista antes de comprar.</li></ul>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" id="idF">Fechar</button></div>`);
+  dlg.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>{const [gi,k]=b.dataset.id.split("|").map(Number),x=IDEIAS[gi][1][k];fechar();
+    editarDesejo(null,{item:x[0],valor:x[1],tipo:x[2],carteira:x[3]||pessoasCart()[0]||CASA,req:(x[4]||[]).map(t=>({t,ok:false})),status:"ideia"})});
+  dlg.querySelector("#idF").onclick=fechar;
+}
+/* ---------- imagem para mandar no grupo da família (sem salários nem faturas) ---------- */
+function imagemFamilia(C){
+  const W=carteirasNomes(),iS=C.meses.indexOf(DES_SEL||C.ref),mes=C.meses[iS];
+  const plan=desejos().filter(d=>d.status==="planejado").sort(ordemDes);
+  const rows=W.map(w=>{const s=C.serie[w][iS],its=plan.filter(d=>d.carteira===w&&d.fonte!=="reserva"),lib=its.filter(d=>C.sched[d.id]?.m&&C.sched[d.id].m<=mes),prox=its.filter(d=>C.sched[d.id]?.m&&C.sched[d.id].m>mes).sort((a,b)=>C.sched[a.id].m.localeCompare(C.sched[b.id].m))[0];
+    const pos=s<0?positivoEm(C.serie[w],C.meses,iS):null;
+    const l1=lib.length?`✅ Pode comprar: ${lib.map(d=>d.item).join(", ")}`:s<0?`⏳ Aguardando ficar positivo${pos?` (previsto: ${nomeMes(pos)})`:""}`:"Nenhuma compra liberada agora";
+    const l2=prox?`⏭ Próximo: ${prox.item} em ${nomeMes(C.sched[prox.id].m)}`:"";
+    return {w,s,l1,l2}});
+  const cv=document.createElement("canvas"),Wd=1080,H=230+rows.length*170+90;cv.width=Wd;cv.height=H;const x=cv.getContext("2d");
+  const F=(t,sz,b,cor,X,Y,al)=>{x.font=`${b?"700":"400"} ${sz}px system-ui,-apple-system,Segoe UI,Roboto,sans-serif`;x.fillStyle=cor;x.textAlign=al||"left";x.fillText(t,X,Y)};
+  const fit=(t,sz,max)=>{x.font=`400 ${sz}px system-ui,sans-serif`;if(x.measureText(t).width<=max)return t;while(t.length>3&&x.measureText(t+"…").width>max)t=t.slice(0,-1);return t+"…"};
+  x.fillStyle="#F3F1EA";x.fillRect(0,0,Wd,H);x.fillStyle="#2C5A86";x.fillRect(0,0,Wd,170);
+  F("Carteiras da família",56,true,"#fff",60,92);F(`${Nome(mes)} · atualizado em ${new Date().toLocaleDateString("pt-BR")}`,30,false,"#DCE7F2",60,140);
+  rows.forEach((r,k)=>{const y=210+k*170;x.fillStyle="#fff";x.beginPath();x.roundRect?x.roundRect(40,y,Wd-80,150,22):x.rect(40,y,Wd-80,150);x.fill();
+    const h=humor(r.s<0?-1:r.s<(r.w===CASA?300:Math.max(1,mesadaDe(r.w)))?100:400);x.fillStyle=h.cor;x.beginPath();x.arc(115,y+75,42,0,Math.PI*2);x.fill();
+    x.fillStyle="#fff";x.beginPath();x.arc(100,y+64,6,0,7);x.arc(130,y+64,6,0,7);x.fill();x.strokeStyle="#fff";x.lineWidth=6;x.lineCap="round";x.beginPath();
+    if(r.s<0){x.moveTo(97,y+98);x.quadraticCurveTo(115,y+84,133,y+98)}else if(h.cor==="#E0A800"){x.moveTo(98,y+92);x.lineTo(132,y+92)}else{x.moveTo(97,y+86);x.quadraticCurveTo(115,y+104,133,y+86)}x.stroke();
+    F(r.w===CASA?"Casa (todos)":r.w,40,true,"#1B2430",185,y+58);F(brl(r.s),44,true,r.s<0?"#A93A36":"#2F7A4A",Wd-70,y+58,"right");
+    F(fit(r.l1,28,Wd-270),28,false,"#36414D",185,y+102);if(r.l2)F(fit(r.l2,26,Wd-270),26,false,"#6B7682",185,y+136)});
+  F("Orçamento da Família",24,false,"#8A939C",Wd/2,H-36,"center");
+  cv.toBlob(async blob=>{const url=URL.createObjectURL(blob),nome=`carteiras-${mes}.png`;
+    const {dlg,fechar}=dlgBase(`<h2 style="margin:0 0 8px">Imagem para a família</h2><p class="small muted" style="margin:0 0 8px">Mostra só os saldos das carteiras e as compras liberadas. Não aparecem salários, faturas nem o fundo de reserva.</p>
+      <img src="${url}" alt="Carteiras da família em ${Nome(mes)}" style="width:100%;border-radius:10px;border:1px solid var(--line)">
+      <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="imF">Fechar</button><button class="btn" id="imB">Baixar imagem</button><button class="btn primary" id="imS">Compartilhar</button></div>`);
+    const file=new File([blob],nome,{type:"image/png"});
+    dlg.querySelector("#imF").onclick=()=>{fechar();URL.revokeObjectURL(url)};
+    dlg.querySelector("#imB").onclick=()=>download(nome,blob);
+    const sh=dlg.querySelector("#imS");if(!(navigator.canShare&&navigator.canShare({files:[file]})))sh.hidden=true;
+    sh.onclick=async()=>{try{await navigator.share({files:[file],title:"Carteiras da família"})}catch{}};
+  },"image/png");
 }
 
 let PLANO_ABERTO=null;
